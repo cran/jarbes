@@ -1,13 +1,26 @@
 jarbes ChangeLog
 
+Version 1.7.2 -- February-March 2019
+  * New function: "gesmix"" performs the finite mixture random effects bias
+  analysis of Verde 2017 and Verde and Curcio 2019.
+  * New arguments for the function "ges":
+      EmBi = "Empirical Bias"standing for "penalization of observational studies"
+      ExPe = "Explicit Penalization" for observational studies.
+  * All if()s 've been checked. The reason was:
+    Issue from CRAN compilation:
+    --- failure: length > 1 in coercion to logical ---
+
+Version 1.7.1 -- December 2018
+  * A bug in function hmr() is fixed.
+
 Version 1.7.0 -- June 2018
-  * Implementation of the function "hmr" for combining aggregated data and 
-  individual participant data. 
+  * Implementation of the function "hmr" for combining aggregated data and
+  individual participant data.
   * New dataset "healing": this dataset corresponds to a systematic review of
-  aggregated data. The primary endpoint is healing without amputation in one 
+  aggregated data. The primary endpoint is healing without amputation in one
   year follow up.
-  * New dataset "healingipd": This dataset corresponds to individual participant
-  data for diabetic patients.
+  * New dataset "healingipd": This dataset corresponds to individual
+  participant data for diabetic patients.
 
 Version 1.1.0		-- December 2017
   * Implementation of the "ges" function for Generalized Evidence Synthesis.
@@ -19,37 +32,37 @@ Version 1.1.0		-- December 2017
 Version 1.0.0		-- September 2017
   * Implementation of the "metarisk"" function for bivariate hierarchical
     meta-regression of aggregated data.
-  * Documentation improved. 
+  * Documentation improved.
 
 Version 0.5.0 -- January 2017
   * Creation of data examples:
   * ppv.cap: PPV23 (23-valent pneumococcal polysaccharide vaccine) with 16 Randomized
     Clinical Trials (RCTs); outcome variable CAP (community-acquired pneumonia).
-    
+
   * ppv.ipde: PPV23 with 3 RCTs and observational studies (5 cohorts and 3 case
-    controls); all data types are aggregated results; outcome variable IPD 
-    (invasive pneumococcal disease). 
-    
-  * stem.cells: 31 randomized controlled trials (RCTs) of two treatment groups of 
-    heart disease patients, where the treatment group received bone marrow stem 
+    controls); all data types are aggregated results; outcome variable IPD
+    (invasive pneumococcal disease).
+
+  * stem.cells: 31 randomized controlled trials (RCTs) of two treatment groups of
+    heart disease patients, where the treatment group received bone marrow stem
     cells and the control group a placebo treatment.
-    
-  * opti: one pragmatic trial, the OPTIMIZE trial, which evaluates the clinical  
+
+  * opti: one pragmatic trial, the OPTIMIZE trial, which evaluates the clinical
     effectiveness of a perioperative, cardiac output–guided hemodynamic therapy
-    algorithm. 
-    And 21 small RCTs with evaluation of Risk of Bias. All are studies have 
+    algorithm.
+    And 21 small RCTs with evaluation of Risk of Bias. All are studies have
     aggregated data.
-  
+
   * foot.ad: 36 RCTs which investigate adjunctive therapies vs. routine medical care in
     diabetic patients. The primary outcome is healing without foot amputation. There
-    are aggregated covariates describing studies and patients characteristics. 
-    
-  * foot.ipd: A cohort study with 260 diabetic patients, the outcome variable is 
+    are aggregated covariates describing studies and patients characteristics.
+
+  * foot.ipd: A cohort study with 260 diabetic patients, the outcome variable is
     healing without amputation in a followup of one year. In addition we have 14
     potential risk factors.
-    
-    
-    
-    
-    
+
+
+
+
+
 

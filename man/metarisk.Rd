@@ -2,28 +2,27 @@
 % Please edit documentation in R/metarisk.R
 \name{metarisk}
 \alias{metarisk}
-\title{Bayesian meta-analysis to investigate the relationship between treatment 
-effect and underlying risk.}
+\title{Bayesian meta-analysis for external validity using baseline risk}
 \usage{
 metarisk(data, two.by.two = TRUE, re = "normal", link = "logit",
   mean.mu.1 = 0, mean.mu.2 = 0, sd.mu.1 = 1, sd.mu.2 = 1,
   sigma.1.upper = 5, sigma.2.upper = 5, mean.Fisher.rho = 0,
-  sd.Fisher.rho = 1/sqrt(2), df = 4, df.estimate = FALSE, df.lower = 3,
-  df.upper = 20, split.w = FALSE, nr.chains = 2, nr.iterations = 10000,
-  nr.adapt = 1000, nr.burnin = 1000, nr.thin = 1, be.quiet = FALSE,
-  r2jags = TRUE)
+  sd.Fisher.rho = 1/sqrt(2), df = 4, df.estimate = FALSE,
+  df.lower = 3, df.upper = 20, split.w = FALSE, nr.chains = 2,
+  nr.iterations = 10000, nr.adapt = 1000, nr.burnin = 1000,
+  nr.thin = 1, be.quiet = FALSE, r2jags = TRUE)
 }
 \arguments{
 \item{data}{A data frame where the first four columns containing the number of events in
-the control group (yc), the number of patients in the control group (nc), 
+the control group (yc), the number of patients in the control group (nc),
 the number of events in the treatment group (yt) and the number of patients in the
-treatment group (nt). If two.by.two = TRUE a data frame where each line 
+treatment group (nt). If two.by.two = TRUE a data frame where each line
 contains the trial results with column names: yc, nc, yt, nt.}
 
 \item{two.by.two}{If TRUE indicates that the trial results are with names: yc, nc, yt, nt.}
 
 \item{re}{Random effects distribution for the resulting model. Possible
-values are \emph{normal} for bivariate random effects and \emph{sm} 
+values are \emph{normal} for bivariate random effects and \emph{sm}
 for scale mixtures.}
 
 \item{link}{The link function used in the model. Possible values are
@@ -33,12 +32,12 @@ for scale mixtures.}
 
 \item{mean.mu.2}{Prior mean of treatment effect, default value is 0.}
 
-\item{sd.mu.1}{Prior standard deviation of mu.1, default value is 1. The default prior of mu.1 is a 
-logistic distribution with mean 0 and dispersion 1. The implicit prior for mu.1 in 
+\item{sd.mu.1}{Prior standard deviation of mu.1, default value is 1. The default prior of mu.1 is a
+logistic distribution with mean 0 and dispersion 1. The implicit prior for mu.1 in
 the probability scale is a uniform between 0 and 1.}
 
-\item{sd.mu.2}{Prior standard deviation of mu.2, default value is 1. The default prior of mu.2 is a 
-logistic distribution with mean 0 and dispersion 1. The implicit prior for mu.2 in 
+\item{sd.mu.2}{Prior standard deviation of mu.2, default value is 1. The default prior of mu.2 is a
+logistic distribution with mean 0 and dispersion 1. The implicit prior for mu.2 in
 the probability scale is a uniform between 0 and 1.}
 
 \item{sigma.1.upper}{Upper bound of the uniform prior of sigma.1, default value is 5.}
@@ -57,7 +56,7 @@ the probability scale is a uniform between 0 and 1.}
 
 \item{df.upper}{Upper bound of the prior of df. The default value is 30.}
 
-\item{split.w}{Split the w parameter in two independent weights one for each random effect. 
+\item{split.w}{Split the w parameter in two independent weights one for each random effect.
 The default value is FALSE.}
 
 \item{nr.chains}{Number of chains for the MCMC computations, default 5.}
@@ -84,43 +83,36 @@ a summary, a print and a plot functions are implemented for this type of object.
 }
 \description{
 This function performers a Bayesian meta-analysis to analyse heterogeneity of
-the treatment effect as a function of the baseline risk. The function fits a 
+the treatment effect as a function of the baseline risk. The function fits a
 hierarchical meta-regression model based on a bivariate random effects model.
 }
 \details{
 The number of events in the control and treated group are modeled with two
-conditional Binomial distributions and the random-effects are based on a 
+conditional Binomial distributions and the random-effects are based on a
 bivariate scale mixture of Normals.
 
-The function calculates the implicit hierarchical meta-regression, where the 
+The function calculates the implicit hierarchical meta-regression, where the
 treatment effect is regressed to the baseline risk (rate of events in the control
-group). The scale mixture weights are used to adjust for internal validity and 
+group). The scale mixture weights are used to adjust for internal validity and
 structural outliers identification.
 
 Computations are done by calling JAGS (Just Another Gibbs Sampler) to perform
 MCMC (Markov Chain Monte Carlo) sampling and returning an object of the
 class \emph{mcmc.list}.
-
-Installation of JAGS: It is important to note that R 3.3.0 introduced a major change in the
-use of toolchain for Windows. This new toolchain is incompatible with older packages written in C++.
-As a consequence, if the installed version of JAGS does not match the R installation, then the rjags
-package will spontaneously crash. Therefore, if a user works with R version >= 3.3.0, then JAGS must
-be installed with the installation program JAGS-4.2.0-Rtools33.exe. For users who continue using R 3.2.4 or
-an earlier version, the installation program for JAGS is the default installer JAGS-4.2.0.exe.
 }
 \examples{
 
-
+\donttest{
 library(jarbes)
 
 # This example is used to test the function and it runs in about 5 seconds.
-# In a real application you must increase the number of MCMC interations. 
+# In a real application you must increase the number of MCMC interations.
 # For example use: nr.burnin = 5000 and nr.iterations = 20000
 
 data(ppvcap)
 dat <- ppvcap[, c("yt","nt","yc","nc")]
 res.hmr.1 <- metarisk(dat,             # Data frame
-                      two.by.two = FALSE,    # Data is given as: (tp, n1, fp, n2)
+                      two.by.two = FALSE,    # Data is given as: (yt, nt, yc, nc)
                       re = "sm",             # Random effects distribution
                       link = "logit",        # Link function
                       sd.Fisher.rho   = 1.7, # Prior standard deviation of correlation
@@ -130,16 +122,16 @@ res.hmr.1 <- metarisk(dat,             # Data frame
                       nr.iterations = 1000,  # Total iterations
                       nr.chains = 2,         # Number of chains
                       r2jags = TRUE)         # Use r2jags as interface to jags
-                      
+
 print(res.hmr.1, digits = 3)
 
 
 
-\donttest{
+
 
 # The following examples corresponds to Section 4 in Verde (2018).
-# These are simulated examples to investigate internal and external validity
-# bias in meta-analysi.
+# These are simulated examples to investigate internal and
+# external validity bias in meta-analysis.
 
 
 library(MASS)
@@ -151,9 +143,9 @@ library(mcmcplots)
 #Experiment 1: External validity bias
 
 set.seed(2018)
-# mean control 
+# mean control
 pc <- 0.7
-# mean treatment 
+# mean treatment
 pt <- 0.4
 # reduction of "amputations" odds ratio
 OR <- (pt/(1-pt)) /(pc/(1-pc))
@@ -172,14 +164,14 @@ sigma.1.true <- 1
 # rho
 rho.true <- -0.5
 Sigma <- matrix(c(sigma.1.true^2, sigma.1.true*sigma.2.true*rho.true,
-                 sigma.1.true*sigma.2.true*rho.true, sigma.2.true^2), 
+                 sigma.1.true*sigma.2.true*rho.true, sigma.2.true^2),
                  byrow = TRUE, ncol = 2)
 Sigma
 
 theta <- mvrnorm(35, mu = c(mu.1.true, mu.2.true),
                 Sigma = Sigma )
-                
-                
+
+
 plot(theta, xlim = c(-2,3))
 abline(v=mu.1.true, lty = 2)
 abline(h=mu.2.true, lty = 2)
@@ -210,12 +202,12 @@ AD.s1 <- data.frame(yc=y.c, nc=n.c, yt=y.t, nt=n.t)
 ##########################################################
 incr.e <- 0.05
 incr.c <- 0.05
-n11 <- AD.s1$yt 
-n12 <- AD.s1$yc 
-n21 <- AD.s1$nt - AD.s1$yt 
+n11 <- AD.s1$yt
+n12 <- AD.s1$yc
+n21 <- AD.s1$nt - AD.s1$yt
 n22 <- AD.s1$nc - AD.s1$yc
 AD.s1$TE <- log(((n11 + incr.e) * (n22 + incr.c))/((n12 + incr.e) * (n21 + incr.c)))
-AD.s1$seTE <- sqrt((1/(n11 + incr.e) + 1/(n12 + incr.e) + 
+AD.s1$seTE <- sqrt((1/(n11 + incr.e) + 1/(n12 + incr.e) +
                      1/(n21 + incr.c) + 1/(n22 + incr.c)))
 
 Pc <- ((n12 + incr.c)/(AD.s1$nc + 2*incr.c))
@@ -230,7 +222,7 @@ dat.points <- data.frame(TE = AD.s1$TE, logitPc = AD.s1$logitPc, N.total = AD.s1
 ###################################################################
 
 res.s1 <- metarisk(AD.s1, two.by.two = FALSE, sigma.1.upper = 5,
-                  sigma.2.upper = 5, 
+                  sigma.2.upper = 5,
                   sd.Fisher.rho = 1.5)
 
 print(res.s1, digits = 4)
@@ -247,35 +239,35 @@ mean(OR.eta.hat)
 sd(OR.eta.hat)
 quantile(OR.eta.hat, probs = c(0.025, 0.5, 0.975))
 
-ind.random <- sample(1:18000, size = 80, replace = F)
+ind.random <- sample(1:18000, size = 80, replace = FALSE)
 
-##############################################################               
+##############################################################
 p1 <- ggplot(dat.points, aes(x = logitPc, y = TE, size = N.total)) +
       xlab("logit Baseline Risk")+
       ylab("log(Odds Ratio)")+
       geom_point(shape = 21, colour = "blue") + scale_size_area(max_size=10)+
-      scale_x_continuous(name= "Rate of The Control Group (logit scale)", 
+      scale_x_continuous(name= "Rate of The Control Group (logit scale)",
                        limits=c(-2, 5)) +
      geom_vline(xintercept = mu.T, colour = "blue", size = 1, lty = 1) +
        geom_hline(yintercept = eta.true, colour = "blue", size = 1, lty = 1)+
-         geom_abline(intercept=beta.0[ind.random], 
+         geom_abline(intercept=beta.0[ind.random],
                    slope=beta.1[ind.random],alpha=0.3,
                    colour = "grey", size = 1.3, lty = 2)+
-         geom_abline(intercept = mean(beta.0[ind.random]), 
+         geom_abline(intercept = mean(beta.0[ind.random]),
          slope = mean(beta.1[ind.random]),
          colour = "black", size = 1.3, lty = 2)+
      geom_abline(intercept = mu.2.true, slope = sigma.2.true/sigma.1.true * rho.true,
-     colour = "blue", size = 1.2)+ theme_bw() 
-     
-     
+     colour = "blue", size = 1.2)+ theme_bw()
+
+
 # Posterior of eta.hat
 
 eta.df <- data.frame(x = OR.eta.hat)
 
 
-p2 <- ggplot(eta.df, aes(x = x)) + 
+p2 <- ggplot(eta.df, aes(x = x)) +
  xlab("Odds Ratio") +
- ylab("Posterior distribution")+ 
+ ylab("Posterior distribution")+
  geom_histogram(fill = "royalblue", colour = "black", alpha= 0.4, bins=80) +
  geom_vline(xintercept = exp(eta.true), colour = "black", size = 1.7, lty = 1)+
  geom_vline(xintercept = c(0.28, 0.22, 0.35), colour = "black", size = 1, lty = 2)+
@@ -297,15 +289,15 @@ AD.s4.contaminated$nc <- AD.s1$nt[ind]
 AD.s4.contaminated$nt <- AD.s1$nc[ind]
 AD.s4.contaminated <- rbind(AD.s4.contaminated,
                          AD.s1[-ind,1:4])
-                         
-res.s4 <- metarisk(AD.s4.contaminated, 
+
+res.s4 <- metarisk(AD.s4.contaminated,
                    two.by.two = FALSE,
                    re = "sm",
                    sigma.1.upper = 3,
-                   sigma.2.upper = 3, 
+                   sigma.2.upper = 3,
                    sd.Fisher.rho = 1.5,
                    df.estimate = TRUE)
-                   
+
 print(res.s4, digits = 4)
 
 attach.jags(res.s4)
@@ -321,7 +313,7 @@ dat.weights <- data.frame(x = studies,
                          y = w.s,
                         ylo  = w.l,
                         yhi  = w.u)
-                        
+
 # Outliers:
 w.col <- studies \%in\% ind
 w.col.plot <- ifelse(w.col, "black", "grey")
@@ -333,14 +325,14 @@ w.plot <- function(d){
   # d$y gives center point
   # d$ylo gives lower limits
   # d$yhi gives upper limits
-  
-  p <- ggplot(d, aes(x=x, y=y, ymin=ylo, ymax=yhi) )+ 
+
+  p <- ggplot(d, aes(x=x, y=y, ymin=ylo, ymax=yhi) )+
        geom_pointrange( colour=w.col.plot, lwd =0.8)+
-       coord_flip() + geom_hline(yintercept = 1, lty=2)+ 
+       coord_flip() + geom_hline(yintercept = 1, lty=2)+
        xlab("Study ID") +
        ylab("Scale mixture weights") + theme_bw()
        return(p)}
-       
+
 w.plot(dat.weights)
 
 #List of other possible statistical models:
@@ -360,7 +352,7 @@ w.plot(dat.weights)
 
 #    6) For the scale mixture random effects:
 #       df = 4 => "fix the degrees of freedom to a particual value".
-#       Note that df = 1 fits a Cauchy bivariate distribution to 
+#       Note that df = 1 fits a Cauchy bivariate distribution to
 #       the random effects.
 #End of the examples
 
@@ -369,9 +361,11 @@ w.plot(dat.weights)
 
 }
 \references{
-Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis and combining randomized and nonrandomized results: a case study in diabetes. Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
+Verde, P.E. and Curcio, D. (2019) Hierarchical Meta-Regression Modelling: The Case
+of The Pneumococcal Polysaccharide Vaccine. Technical Report.
 
-Verde, P.E. and Curcio, D. (2017) Hierarchical Meta-Regression Modelling: The Case of The Pneumococcal Polysaccharide Vaccine. Technical Report.
+Verde, P.E. (2019) The hierarchical meta-regression approach and learning from clinical evidence.
+Biometrical Journal. 1 - 23.
 
-Verde, P.E. (2018) The Hierarchical Meta-Regression Approach and Learning from Clinical Evidence. Technical report.
+Verde, P. E. (2017) Two Examples of Bayesian Evidence Synthesis with the Hierarchical Meta-Regression Approach. Chap.9, pag 189-206. Bayesian Inference, ed. Tejedor, Javier Prieto. InTech.
 }
