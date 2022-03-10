@@ -24,7 +24,7 @@
 #'
 #' @param mean.mu.1       Prior mean of baseline risk, default value is 0.
 #'
-#' @param mean.mu.2       Prior mean of treatment effect, default value is 0.
+#' @param mean.mu.2       Prior mean of the relative treatment effect, default value is 0.
 #'
 #' @param sd.mu.1         Prior standard deviation of mu.1, default value is 1. The default prior of mu.1 is a
 #'                        logistic distribution with mean 0 and dispersion 1. The implicit prior for mu.1 in
@@ -92,41 +92,69 @@
 #' @references Verde, P.E. and Curcio, D. (2019) Hierarchical Meta-Regression Modelling: The Case
 #' of The Pneumococcal Polysaccharide Vaccine. Technical Report.
 #'
-#' @references Verde, P.E. (2019) The hierarchical meta-regression approach and learning from clinical evidence.
+#' @references Verde, P.E. (2019) The hierarchical meta-regression
+#' approach and learning from clinical evidence.
 #' Biometrical Journal. 1 - 23.
 #'
-#' @references Verde, P. E. (2017) Two Examples of Bayesian Evidence Synthesis with the Hierarchical Meta-Regression Approach. Chap.9, pag 189-206. Bayesian Inference, ed. Tejedor, Javier Prieto. InTech.
+#' @references Verde, P. E. (2017) Two Examples of Bayesian Evidence Synthesis with
+#' the Hierarchical Meta-Regression Approach. Chap.9, pag 189-206.
+#' Bayesian Inference, ed. Tejedor, Javier Prieto. InTech.
 #'
 #' @examples
 #'
-#' \donttest{
+#' \dontrun{
 #' library(jarbes)
 #'
 #' # This example is used to test the function and it runs in about 5 seconds.
 #' # In a real application you must increase the number of MCMC interations.
 #' # For example use: nr.burnin = 5000 and nr.iterations = 20000
 #'
-#' data(ppvcap)
-#' dat <- ppvcap[, c("yt","nt","yc","nc")]
-#' res.hmr.1 <- metarisk(dat,             # Data frame
-#'                       two.by.two = FALSE,    # Data is given as: (yt, nt, yc, nc)
-#'                       re = "sm",             # Random effects distribution
-#'                       link = "logit",        # Link function
-#'                       sd.Fisher.rho   = 1.7, # Prior standard deviation of correlation
-#'                       split.w = TRUE,        # Split the studies' weights
-#'                       df.estimate = TRUE,    # Estimate the posterior of df parameter.
-#'                       nr.burnin = 100,       # Iterations for burnin
-#'                       nr.iterations = 1000,  # Total iterations
-#'                       nr.chains = 2,         # Number of chains
-#'                       r2jags = TRUE)         # Use r2jags as interface to jags
+# data(ppvcap)
+# dat <- ppvcap[, c("yt","nt","yc","nc")]
+# res.hmr.1 <- metarisk(dat,                   # Data frame
+#                       two.by.two = TRUE,     # Data is given as: (yt, nt, yc, nc)
+#                       re = "sm",             # Random effects distribution
+#                       link = "logit",        # Link function
+#                       sd.Fisher.rho   = 1.7, # Prior standard deviation of correlation
+#                       split.w = FALSE,       # Split the studies' weights
+#                       df.estimate = TRUE,    # Estimate the posterior of df parameter.
+#                       nr.burnin = 100,       # Iterations for burnin
+#                       nr.iterations = 10000,  # Total iterations
+#                       nr.chains = 2,         # Number of chains
+#                       r2jags = TRUE)         # Use r2jags as interface to jags
+#
+# summary(res.hmr.1)
+#
+# plot(res.hmr.1, x.lim = c(-4, -1), title.plot = "Bayesian baseline risk meta-analysis adjustment")
+#
+# diagnostic(res.hmr.1, study.names = ppvcap$Name_Year, median.w = 1.2)
+#
+# # metarisk split.w == TRUE
+#
+# res.hmr.2 <- metarisk(dat,                   # Data frame
+#                       two.by.two = TRUE,     # Data is given as: (yt, nt, yc, nc)
+#                       re = "sm",             # Random effects distribution
+#                       link = "logit",        # Link function
+#                       sd.Fisher.rho   = 1.7, # Prior standard deviation of correlation
+#                       split.w = TRUE,        # Split the studies' weights
+#                       df.estimate = TRUE,    # Estimate the posterior of df parameter.
+#                       nr.burnin = 100,       # Iterations for burnin
+#                       nr.iterations = 1000,  # Total iterations
+#                       nr.chains = 2,         # Number of chains
+#                       r2jags = TRUE)         # Use r2jags as interface to jags
+#
+# summary(res.hmr.2)
+#
+# plot(res.hmr.2, x.lim = c(-4.5, -0.5), title.plot = "Bayesian baseline risk meta-analysis adjustment")
+#
+# diagnostic(res.hmr.2, study.names = ppvcap$Name_Year, median.w = 1.2)
+#
+#
 #'
-#' print(res.hmr.1, digits = 3)
 #'
 #'
 #'
-#'
-#'
-#' # The following examples corresponds to Section 4 in Verde (2018).
+#' # The following examples corresponds to Section 4 in Verde (2019).
 #' # These are simulated examples to investigate internal and
 #' # external validity bias in meta-analysis.
 #'
@@ -203,7 +231,7 @@
 #'n12 <- AD.s1$yc
 #'n21 <- AD.s1$nt - AD.s1$yt
 #'n22 <- AD.s1$nc - AD.s1$yc
-#'AD.s1$TE <- log(((n11 + incr.e) * (n22 + incr.c))/((n12 + incr.e) * (n21 + incr.c)))
+#'AD.s1$TE <- log(((n11 + incr.e)*(n22 + incr.c))/((n12 + incr.e) * (n21 + incr.c)))
 #'AD.s1$seTE <- sqrt((1/(n11 + incr.e) + 1/(n12 + incr.e) +
 #'                      1/(n21 + incr.c) + 1/(n22 + incr.c)))
 #'
@@ -916,7 +944,23 @@ results$data <- data
 results$two.by.two <- two.by.two
 #results$r2jags <- r2jags
 results$split.w <- split.w
-#results$df.estimate <- df.estimate
+results$df.estimate <- df.estimate
+
+# Priors ...
+
+results$prior$mean.mu.1       = mean.mu.1
+results$prior$mean.mu.1       = mean.mu.1
+results$prior$sd.mu.1         = sd.mu.1
+results$prior$sd.mu.2         = sd.mu.2
+results$prior$sigma.1.upper   = sigma.1.upper
+results$prior$sigma.2.upper   = sigma.2.upper
+results$prior$mean.Fisher.rho = mean.Fisher.rho
+results$prior$sd.Fisher.rho   = sd.Fisher.rho
+results$prior$df              = df
+results$prior$df.estimate     = df.estimate
+results$prior$df.lower        = df.lower
+results$prior$df.upper        = df.upper
+
 
 class(results) <- c("metarisk")
 
@@ -941,57 +985,3 @@ print.metarisk <- function(x, digits, ...)
   print(x$BUGSoutput,...)
 
 }
-
-
-
-
-
-#' Generic summary function for metarisk object in jarbes
-#' @param object The object generated by the metarisk function.
-#'
-#' @param digits The number of significant digits printed. The default value is 3.
-#'
-#' @param intervals A numeric vector of probabilities with values in [0,1]. The default value is
-#'                  intervals = c(0.025, 0.5, 0.975).
-#'
-#' @param ... \dots
-#'
-#' @export
-#'
-summary.metarisk <- function(object, digits = 3,  intervals = c(0.025, 0.5, 0.975), ...)
-{
-
-  print(object$BUGSoutput, digits= digits, intervals = intervals, ...)
-
-}
-
-
-
-#' Generic plot function for metarisk object in jarbes.
-#'
-#' @param x The object generated by the metarisk function.
-#'
-#' @param ... \dots
-#'
-#' @export
-#'
-plot.metarisk <- function(x, ...)
-{
-  plot(x)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

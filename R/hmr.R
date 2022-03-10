@@ -113,14 +113,99 @@
 #' be installed with the installation program JAGS-4.2.0-Rtools33.exe. For users who continue using R 3.2.4 or
 #' an earlier version, the installation program for JAGS is the default installer JAGS-4.2.0.exe.
 #'
-#' @references Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis and combining randomized and nonrandomized results: a case study in diabetes. Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
+#' @references Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis
+#'  and combining randomized and nonrandomized results: a case study in diabetes.
+#'  Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
 #'
-#' @references Verde, P.E. (2019) The hierarchical meta-regression approach and learning from clinical evidence.
-#' Biometrical Journal. 1 - 23.
+#' @references Verde, P.E. (2019) The hierarchical meta-regression approach and learning from
+#'  clinical evidence. Biometrical Journal. 1 - 23.
 #'
 #'
 #' @examples
 #' \dontrun{
+#'
+#' # Examples of new plot and diagnostic functions for version >= 2.0.0
+#
+# # hmr split.w == FALSE
+#
+# data("healing")
+# AD <- healing[, c("y_c", "n_c", "y_t", "n_t")]
+#
+# data("healingipd")
+#
+# IPD <- healingipd[, c("healing.without.amp", "PAD", "neuropathy",
+#                       "first.ever.lesion", "no.continuous.care",
+#                       "male", "diab.typ2",
+#                       "insulin", "HOCHD",
+#                       "HOS", "CRF", "dialysis",
+#                       "DNOAP", "smoking.ever",
+#                       "wagner.class")]
+#
+# mx2 <- hmr(AD, two.by.two = FALSE,
+#            dataIPD = IPD,
+#            re = "sm",
+#            link = "logit",
+#            sd.mu.1 = 2,
+#            sd.mu.2 = 2,
+#            mean.mu.phi = 0,
+#            sd.mu.phi = 1,
+#            sigma.1.upper = 5,
+#            sigma.2.upper = 5,
+#            sigma.beta.upper = 5,
+#            sd.Fisher.rho = 1.25,
+#            df.estimate = FALSE,
+#            df.lower = 3,
+#            df.upper = 10,
+#            nr.chains = 1,
+#            nr.iterations = 1500,
+#            nr.adapt = 100,
+#            nr.thin = 1)
+#
+# summary(mx2)
+#
+# plot(mx2, names = c("PAD", "wagner.class"),
+#      name.side = c("right", "left"),
+#      x.lim = c(-6, 3.5), y.lim = c(-2, 4))
+#
+# diagnostic(mx2, study.names = healing$Study)
+#
+# diagnostic(mx2, mu.phi = FALSE, study.names = healing$Study)
+#
+# # hmr split.w == TRUE
+#
+# mx3 <- hmr(AD, two.by.two = FALSE,
+#            dataIPD = IPD,
+#            re = "sm",
+#            link = "logit",
+#            split.w = TRUE,
+#            sd.mu.1 = 2,
+#            sd.mu.2 = 2,
+#            sd.mu.phi = 1,
+#            sigma.1.upper = 5,
+#            sigma.2.upper = 5,
+#            sigma.beta.upper = 5,
+#            sd.Fisher.rho = 1.25,
+#            df.estimate = FALSE,
+#            df.lower = 3,
+#            df.upper = 10,
+#            nr.chains = 1,
+#            nr.iterations = 1500,
+#            nr.adapt = 100,
+#            nr.thin = 1)
+#
+# summary(mx3)
+#
+# plot(mx3, x.lim = c(-6, 5), names = c("PAD"), name.side = c("left"))
+#
+# plot(mx3, x.lim = c(-6, 5),y.lim = c(-2,3))
+#
+# diagnostic(mx3, study.names = healing$Study)
+#
+# diagnostic(mx3, mu.phi = FALSE, study.names = healing$Study)
+#
+#
+#'
+#'
 #'
 #' # Example: from Verde 2019, Section 5
 #'
@@ -155,9 +240,23 @@
 #'            nr.adapt = 100,
 #'            nr.thin = 1)
 #'
-#' print(mx2)
 #'
-#'# This experiment corresponds to Section 4 in Verde (2018).
+#' summary(mx2)
+#' plot(mx2, names = c("PAD", "dialysis", "male"))
+#'
+#' diagnostic(mx2)
+#'
+#' diagnostic(mx2, mu.phi = FALSE, study.names = healing$Study)
+#'
+#' diagnostic(mx2, study.names = healing$Study)
+#'
+#' betaplot(mx2)
+#'
+#'
+#'
+#'
+#'
+#'# This experiment corresponds to Section 4 in Verde (2019).
 #'#
 #'# Experiment: Combining aggretated data from RCTs and a single
 #'# observational study with individual participant data.
@@ -1162,7 +1261,26 @@ for( i in 1:M){
   results$two.by.two <- two.by.two
   #results$r2jags <- r2jags
   results$split.w <- split.w
-  #results$df.estimate <- df.estimate
+  results$df.estimate <- df.estimate
+
+  # Priors ...
+
+  results$prior$mean.mu.1       = mean.mu.1
+  results$prior$mean.mu.1       = mean.mu.1
+  results$prior$mean.mu.phi     = mean.mu.phi
+  results$prior$sd.mu.1         = sd.mu.1
+  results$prior$sd.mu.2         = sd.mu.2
+  results$prior$sd.mu.phi       = sd.mu.phi
+  results$prior$sigma.1.upper   = sigma.1.upper
+  results$prior$sigma.2.upper   = sigma.2.upper
+  results$prior$sigma.beta.upper= sigma.beta.upper
+  results$prior$mean.Fisher.rho = mean.Fisher.rho
+  results$prior$sd.Fisher.rho   = sd.Fisher.rho
+  results$prior$df              = df
+  results$prior$df.estimate     = df.estimate
+  results$prior$df.lower        = df.lower
+  results$prior$df.upper        = df.upper
+
 
   class(results) <- c("hmr")
 
@@ -1257,50 +1375,3 @@ fround <- function (x, digits) {
 pfround <- function (x, digits) {
   print (fround (x, digits), quote=FALSE)
 }
-
-
-
-
-
-
-
-#' Generic summary function for hmr object in jarbes
-#' @param object The object generated by the hmr function.
-#'
-#' @param digits The number of significant digits printed. The default value is 3.
-#'
-#' @param intervals A numeric vector of probabilities with values in [0,1]. The default value is
-#'                  intervals = c(0.025, 0.5, 0.975).
-#'
-#' @param ... \dots
-#'
-#' @export
-#'
-summary.hmr <- function(object, digits = 3,  intervals = c(0.025, 0.5, 0.975), ...)
-{
-
-  print(object$BUGSoutput, digits= digits, intervals = intervals, ...)
-
-}
-
-
-
-
-#' Generic plot function for hmr object in jarbes.
-#'
-#' @param x The object generated by the hmr function.
-#'
-#' @param ... \dots
-#'
-#' @export
-#'
-plot.hmr <- function(x, ...)
-{
-  plot(x)
-}
-
-
-
-
-
-

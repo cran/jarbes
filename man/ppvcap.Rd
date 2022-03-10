@@ -4,7 +4,8 @@
 \name{ppvcap}
 \alias{ppvcap}
 \title{Efficacy of Pneumococcal Polysaccharide Vaccine in Preventing Community Acquired Pneumonia}
-\format{A matrix with 16 rows and 18 columns. Each row represents study results, the columns are:
+\format{
+A matrix with 16 rows and 18 columns. Each row represents study results, the columns are:
    \describe{
     \item{Name_Year}{Name of the first author and year.}
     \item{Year}{Year of publication.}
@@ -28,7 +29,8 @@
     \item{R6}{Incomplete outcome data (attrition bias): low;high;unclear.}
     \item{R7}{Selective reporting (reporting bias): low;high;unclear.}
     \item{Participants}{Comments on patients characteristics.}
-    }}
+    }
+}
 \source{
 The data were obtainded from: Moberley et al. (2013).
 }
@@ -36,9 +38,9 @@ The data were obtainded from: Moberley et al. (2013).
 PPV23 (23-valent pneumococcal polysaccharide vaccine) with 16 Randomized Clinical Trials
 (RCTs); outcome variable CAP (community-acquired pneumonia).
 
-This data frame corresponds to 16 randomized control trials (RCTs) reporting efficacy of 
+This data frame corresponds to 16 randomized control trials (RCTs) reporting efficacy of
 the PPV (Pneumococcal Polysaccharide) vaccine in preventing CAP (community acquired pneumonia).
-The data frame contains the evaluation of Risk of Bias (RoB) of the trials and some study population 
+The data frame contains the evaluation of Risk of Bias (RoB) of the trials and some study population
 characteristics.
 }
 \references{

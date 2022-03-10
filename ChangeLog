@@ -1,10 +1,119 @@
 jarbes ChangeLog
 
+Version 2.0.0 -- January-Febrary-March 2022
+
+Commitments for the next version
+
+* bmeta: scale mixture random effects
+* diagnostic bmeta: compare Bayesian cross-validation and scale mixture weights
+
+* Vignettes:
+  * bmeta
+  * bcmeta
+  * b3lmeta
+  * metarisk
+  * hmr
+
+* bforest: a forest plot for bmeta; bcmeta; b3lmeta.
+
+* hmr: Posterior prediction of the treatment effect to an new group of patients
+
+* Effective number of studies in bcmeta and bmeta and b3lmeta
+
+* Function: betaplot for the regression coefficients of hmr
+
+* Binomial and Poisson likelihoods in bmeta, bcmeta and b3lmeta using
+the arguments "family=...", "link="..."
+
+* Tweedy's formula for bias: this is to understand the different bias
+correction approaches (e.g. bmeta vs. bcmeta vs. b3lmeta vs. bmetareg)
+
+* Planned:  Meta-regression function........................
+* Function: bmetareg
+* Function: summary.bmetareg
+* Function: plot for bmetareg
+* Function: diagnostic for bmetareg
+* Function: betaplot for the regression coefficients of bmetareg
+
+* Publication bias modeling.
+
+Done in version 2.0.0 ......................................
+
+* Approximated Bayesian Cross-Validation for bmeta, b3lmeta, bcmeta.
+* Function: diagnostic for bcmeta (specific model and Bayesian cross-validation)
+* Function: diagnoistic for bmeta (Bayesian cross-validation)
+* Function: diagnoistic for b3lmeta (Bayesian cross-validation)
+
+* Include as argument the labels and axis information for plot functions:
+    hmr      (done)
+    metarisk (done)
+    bcmeta   (done)
+    bmeta    (done)
+    b3lmeta  (done)
+
+* plot.bcmeta: add the arrows and the text for the distributions...
+
+* summary.b3lmeta: add the means by groups! (done)
+
+* Function: plot for bcmeta (done)
+* Function: plot for bmeta  (done)
+* Function: plot for b3lmeta (done)
+
+* Function: bl3meta for three levels hierarchical meta-analysis (done)
+* Function: summary for bl3meta (done)
+* The function b3lmeta replaced the function ges
+
+* Labels (posterior-prior) in the diagnostic function of hmr (done)
+* Function bmeta for simple bayesian metaanalysis (done)
+* Function summary for bmeta (done)
+* Summary functions:
+* Include the prior parameters in the object type "hmr" (done)
+* Include the prior parameters in the object type "bcmeta" (done)
+* Include the prior parameters in the object type "metarisk" (done)
+* Include the prior parameters in the object type "bmeta" (done)
+* Include the prior parameters in the object type "b3lmeta" (done)
+
+
+Version 1.9.6 -- December 2021
+
+  * Function: bcmeta implements the "Bias-Corrected" Meta-analysis model
+  * Function: summary for bcmeta
+  * Function: plot for metarisk
+  * Function: summary for metarisk
+  * Function: diagnostic for metarisk
+  * Function: plot for hmr
+  * Function: summary for hmr
+  * Function: diagnostic for hmr
+  * New data frame covid19: meta-analysis of risk factors for complications
+    and death in COVID-19 patients.
+  * The function bcmeta replaced the function gesmix
+
+
+Version 1.8.0 -- Summer 2020
+
+  * The function "metamix" is not part of jarbes anymore. It will be
+  replaced by the function "bcmeta"
+
+
+Version 1.7.4 -- November - December 2019
+
+  * Preparation for the paper on mixture models
+
+Version 1.7.3 -- April - May 2019
+
+  * Correction in the example of data ppvcap,
+  metariks(..., two.by.two = TRUE,...)
+
+  * Typo correction in the example of ges() "ppvipv" must be "ppvipd"
+
+
 Version 1.7.2 -- February-March 2019
   * New function: "gesmix"" performs the finite mixture random effects bias
   analysis of Verde 2017 and Verde and Curcio 2019.
+
   * New arguments for the function "ges":
-      EmBi = "Empirical Bias"standing for "penalization of observational studies"
+      EmBi = "Empirical Bias"standing for "penalization of observational
+      studies"
       ExPe = "Explicit Penalization" for observational studies.
   * All if()s 've been checked. The reason was:
     Issue from CRAN compilation:

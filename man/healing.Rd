@@ -4,7 +4,8 @@
 \name{healing}
 \alias{healing}
 \title{Efficacy of diabetic foot healing using adjuvant treatments}
-\format{A matrix with 35 rows and 9 columns. Each row represents study results, 
+\format{
+A matrix with 35 rows and 9 columns. Each row represents study results,
 the columns are:
    \describe{
     \item{Study}{Name of the first author and year.}
@@ -16,9 +17,10 @@ the columns are:
     \item{fup_weeks}{Length of followup in weeks.}
     \item{PAD}{Inclusion of patients with peripheral arterial disease.}
     \item{wagner_4}{Inclusion of patients with Wagner score 3 and 4.}
-    }}
+    }
+}
 \source{
-The data were obtainded from: Centre for Clinical Practice at NICE (UK and others) 
+The data were obtainded from: Centre for Clinical Practice at NICE (UK and others)
 (2011), Clinical guideline 119. Diabetic foot problems: Inpatient Management of Diabetic Foot Problems.
  Tech. rep., National Institute for Health and Clinical Excellence.
 }
@@ -29,7 +31,7 @@ routine care, where the endpoint was healing without amputations within a period
 less than or equal to one year.
 }
 \references{
-Verde, P.E. (2018) The Hierarchical Meta-Regression Approach and Learning 
+Verde, P.E. (2018) The Hierarchical Meta-Regression Approach and Learning
 from Clinical Evidence. Technical Report.
 }
 \keyword{datasets}

@@ -4,13 +4,32 @@
 \alias{metarisk}
 \title{Bayesian meta-analysis for external validity using baseline risk}
 \usage{
-metarisk(data, two.by.two = TRUE, re = "normal", link = "logit",
-  mean.mu.1 = 0, mean.mu.2 = 0, sd.mu.1 = 1, sd.mu.2 = 1,
-  sigma.1.upper = 5, sigma.2.upper = 5, mean.Fisher.rho = 0,
-  sd.Fisher.rho = 1/sqrt(2), df = 4, df.estimate = FALSE,
-  df.lower = 3, df.upper = 20, split.w = FALSE, nr.chains = 2,
-  nr.iterations = 10000, nr.adapt = 1000, nr.burnin = 1000,
-  nr.thin = 1, be.quiet = FALSE, r2jags = TRUE)
+metarisk(
+  data,
+  two.by.two = TRUE,
+  re = "normal",
+  link = "logit",
+  mean.mu.1 = 0,
+  mean.mu.2 = 0,
+  sd.mu.1 = 1,
+  sd.mu.2 = 1,
+  sigma.1.upper = 5,
+  sigma.2.upper = 5,
+  mean.Fisher.rho = 0,
+  sd.Fisher.rho = 1/sqrt(2),
+  df = 4,
+  df.estimate = FALSE,
+  df.lower = 3,
+  df.upper = 20,
+  split.w = FALSE,
+  nr.chains = 2,
+  nr.iterations = 10000,
+  nr.adapt = 1000,
+  nr.burnin = 1000,
+  nr.thin = 1,
+  be.quiet = FALSE,
+  r2jags = TRUE
+)
 }
 \arguments{
 \item{data}{A data frame where the first four columns containing the number of events in
@@ -30,7 +49,7 @@ for scale mixtures.}
 
 \item{mean.mu.1}{Prior mean of baseline risk, default value is 0.}
 
-\item{mean.mu.2}{Prior mean of treatment effect, default value is 0.}
+\item{mean.mu.2}{Prior mean of the relative treatment effect, default value is 0.}
 
 \item{sd.mu.1}{Prior standard deviation of mu.1, default value is 1. The default prior of mu.1 is a
 logistic distribution with mean 0 and dispersion 1. The implicit prior for mu.1 in
@@ -102,34 +121,18 @@ class \emph{mcmc.list}.
 }
 \examples{
 
-\donttest{
+\dontrun{
 library(jarbes)
 
 # This example is used to test the function and it runs in about 5 seconds.
 # In a real application you must increase the number of MCMC interations.
 # For example use: nr.burnin = 5000 and nr.iterations = 20000
 
-data(ppvcap)
-dat <- ppvcap[, c("yt","nt","yc","nc")]
-res.hmr.1 <- metarisk(dat,             # Data frame
-                      two.by.two = FALSE,    # Data is given as: (yt, nt, yc, nc)
-                      re = "sm",             # Random effects distribution
-                      link = "logit",        # Link function
-                      sd.Fisher.rho   = 1.7, # Prior standard deviation of correlation
-                      split.w = TRUE,        # Split the studies' weights
-                      df.estimate = TRUE,    # Estimate the posterior of df parameter.
-                      nr.burnin = 100,       # Iterations for burnin
-                      nr.iterations = 1000,  # Total iterations
-                      nr.chains = 2,         # Number of chains
-                      r2jags = TRUE)         # Use r2jags as interface to jags
-
-print(res.hmr.1, digits = 3)
 
 
 
 
-
-# The following examples corresponds to Section 4 in Verde (2018).
+# The following examples corresponds to Section 4 in Verde (2019).
 # These are simulated examples to investigate internal and
 # external validity bias in meta-analysis.
 
@@ -206,7 +209,7 @@ n11 <- AD.s1$yt
 n12 <- AD.s1$yc
 n21 <- AD.s1$nt - AD.s1$yt
 n22 <- AD.s1$nc - AD.s1$yc
-AD.s1$TE <- log(((n11 + incr.e) * (n22 + incr.c))/((n12 + incr.e) * (n21 + incr.c)))
+AD.s1$TE <- log(((n11 + incr.e)*(n22 + incr.c))/((n12 + incr.e) * (n21 + incr.c)))
 AD.s1$seTE <- sqrt((1/(n11 + incr.e) + 1/(n12 + incr.e) +
                      1/(n21 + incr.c) + 1/(n22 + incr.c)))
 
@@ -364,8 +367,11 @@ w.plot(dat.weights)
 Verde, P.E. and Curcio, D. (2019) Hierarchical Meta-Regression Modelling: The Case
 of The Pneumococcal Polysaccharide Vaccine. Technical Report.
 
-Verde, P.E. (2019) The hierarchical meta-regression approach and learning from clinical evidence.
+Verde, P.E. (2019) The hierarchical meta-regression
+approach and learning from clinical evidence.
 Biometrical Journal. 1 - 23.
 
-Verde, P. E. (2017) Two Examples of Bayesian Evidence Synthesis with the Hierarchical Meta-Regression Approach. Chap.9, pag 189-206. Bayesian Inference, ed. Tejedor, Javier Prieto. InTech.
+Verde, P. E. (2017) Two Examples of Bayesian Evidence Synthesis with
+the Hierarchical Meta-Regression Approach. Chap.9, pag 189-206.
+Bayesian Inference, ed. Tejedor, Javier Prieto. InTech.
 }

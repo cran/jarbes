@@ -4,7 +4,8 @@
 \name{healingipd}
 \alias{healingipd}
 \title{Individual participant data for diabetic patients}
-\format{A dataframe with 260 rows and 18 columns. Each row represents a patient, 
+\format{
+A dataframe with 260 rows and 18 columns. Each row represents a patient,
 the columns are:
    \describe{
     \item{healing.without.amp}{Outcome variable: Healing without amputation with in one year.}
@@ -25,7 +26,8 @@ the columns are:
     \item{age}{Age at baseline in years.}
     \item{diabdur}{Diabetes duration at baseline.}
     \item{wagner.class}{Wagner score 1-2 vs. 3-4-5.}
-                }}
+                }
+}
 \source{
 Morbach, S, et al. (2012). Long-Term Prognosis of Diabetic Foot Patients and Their Limbs: Amputation and death over the course of a decade,Diabetes Care, 35, 10, 2012-2017.
 }

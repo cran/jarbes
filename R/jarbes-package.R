@@ -1,9 +1,12 @@
 #' Just a Rather Bayesian Evidence Synthesis
 #'
 #' This package was developed with the aim of simplifying the use of meta-analysis
-#' models that combine obsevational and experimental data (e.g. randomized control trials).
+#' models that combine observational and experimental data (e.g. randomized control trials).
+#' This package can be useful in "Real-World-Evidence-Synthesis" and "Generalized Evidence
+#' Synthesis".
+#'
 #' The package implements a series of innovative statistical models from the class:
-#' Hierarchical Meta-Regression models. This class of models aims to explicitelly model
+#' Hierarchical Meta-Regression models. This class of models aims to explicitly model
 #' the different types of biases that we have to face when we combine evidence of different
 #' study types.
 #'
@@ -11,8 +14,8 @@
 #' \tabular{ll}{
 #' Package:  \tab jarbes     \cr
 #' Type:     \tab Package    \cr
-#' Version:  \tab 1.7.2      \cr
-#' Date:     \tab 2019-03-11 \cr
+#' Version:  \tab 2.0.0      \cr
+#' Date:     \tab 2022-01-17 \cr
 #' License:  \tab GPL (>= 2) \cr
 #' LazyLoad: \tab yes        \cr }
 #'
@@ -29,10 +32,13 @@
 #'
 #' @references Verde, P. E. (2017) Two Examples of Bayesian Evidence Synthesis
 #' with the Hierarchical Meta-Regression Approach. Chap.9, pag 189-206.
-#' Bayesian Inference, ed. Tejedor, Javier Prieto. InTech. doi 10.5772/intechopen.70231.
+#' Bayesian Inference, ed. Tejedor, Javier Prieto. InTech.
 #'
-#' @references Verde, P. E. (2019) The Hierarchical Meta-Regression Approach and
-#' Learning from Clinical Evidence. Biometrical Journal, 2018;1–23.
+#' @references Verde, PE. (2019) The hierarchical metaregression approach
+#' and learning from clinical evidence. Biometrical Journal. 2019; 61: 535– 557.
+#'
+#' @references Verde, PE. (2021) A bias-corrected meta-analysis model for combining,
+#'  studies of different types and quality. Biometrical Journal. 2021; 63: 406– 422.
 #'
 #' @keywords Hierarchical Modeling, Bayesian Meta-Analysis, Generalized Evidence Synthesis,
 #' Conflict of Evidence, Outliers Detection, Multiparameters Meta-Analysis.

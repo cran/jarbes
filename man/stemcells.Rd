@@ -4,10 +4,11 @@
 \name{stemcells}
 \alias{stemcells}
 \title{Meta-analysis of 31 randomized controled trials (RCTs) with reported discrepancies}
-\format{A matrix with 31 rows and 5 columns. Each row represents study results, the columns are:
+\format{
+A matrix with 31 rows and 5 columns. Each row represents study results, the columns are:
    \describe{
     \item{trial}{ID name of the trial.}
-    \item{effect.size}{treatment effect is measured as the difference of the 
+    \item{effect.size}{treatment effect is measured as the difference of the
           ejection fraction between groups, which measures the improvement of
           left ventricular function in the heart.}
     \item{se.effect}{Standard Error of the effect.size.}
@@ -15,13 +16,14 @@
     \item{n.discrep}{Number of detected discrepancies in the published trial.
     Discrepancies are defined as two or more reported facts that cannot both be
     true because they are logically or mathematically incompatible.}
-    }}
+    }
+}
 \source{
 Nowbar, A N, et al. (2014) Discrepancies in autologous bone marrow stem cell trials and enhancemen of ejection fraction (DAMASCENE): weighted regression and meta-analysis. BMJ, 348,1-9.
 }
 \description{
 Meta-analysis of 31 randomized controled trials (RCTs) of two treatment groups
-of heart disease patients, where the treatment group received bone marrow stem 
+of heart disease patients, where the treatment group received bone marrow stem
 cells and the control group a placebo treatment.
 }
 \references{

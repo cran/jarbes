@@ -4,14 +4,36 @@
 \alias{hmr}
 \title{Bayesian meta-analysis for cross-design synthesis.}
 \usage{
-hmr(data, two.by.two = TRUE, dataIPD, re = "normal", link = "logit",
-  mean.mu.1 = 0, mean.mu.2 = 0, mean.mu.phi = 0, sd.mu.1 = 1,
-  sd.mu.2 = 1, sd.mu.phi = 1, sigma.1.upper = 5, sigma.2.upper = 5,
-  sigma.beta.upper = 5, mean.Fisher.rho = 0,
-  sd.Fisher.rho = 1/sqrt(2), df = 4, df.estimate = FALSE,
-  df.lower = 3, df.upper = 20, split.w = FALSE, nr.chains = 2,
-  nr.iterations = 10000, nr.adapt = 1000, nr.burnin = 1000,
-  nr.thin = 1, be.quiet = FALSE, r2jags = TRUE)
+hmr(
+  data,
+  two.by.two = TRUE,
+  dataIPD,
+  re = "normal",
+  link = "logit",
+  mean.mu.1 = 0,
+  mean.mu.2 = 0,
+  mean.mu.phi = 0,
+  sd.mu.1 = 1,
+  sd.mu.2 = 1,
+  sd.mu.phi = 1,
+  sigma.1.upper = 5,
+  sigma.2.upper = 5,
+  sigma.beta.upper = 5,
+  mean.Fisher.rho = 0,
+  sd.Fisher.rho = 1/sqrt(2),
+  df = 4,
+  df.estimate = FALSE,
+  df.lower = 3,
+  df.upper = 20,
+  split.w = FALSE,
+  nr.chains = 2,
+  nr.iterations = 10000,
+  nr.adapt = 1000,
+  nr.burnin = 1000,
+  nr.thin = 1,
+  be.quiet = FALSE,
+  r2jags = TRUE
+)
 }
 \arguments{
 \item{data}{Aggregated data results: a data frame where the first four columns containing the number of events in
@@ -125,6 +147,10 @@ an earlier version, the installation program for JAGS is the default installer J
 \examples{
 \dontrun{
 
+# Examples of new plot and diagnostic functions for version >= 2.0.0
+
+
+
 # Example: from Verde 2019, Section 5
 
 library(jarbes)
@@ -158,9 +184,23 @@ mx2 <- hmr(AD, two.by.two = FALSE,
            nr.adapt = 100,
            nr.thin = 1)
 
-print(mx2)
 
-# This experiment corresponds to Section 4 in Verde (2018).
+summary(mx2)
+plot(mx2, names = c("PAD", "dialysis", "male"))
+
+diagnostic(mx2)
+
+diagnostic(mx2, mu.phi = FALSE, study.names = healing$Study)
+
+diagnostic(mx2, study.names = healing$Study)
+
+betaplot(mx2)
+
+
+
+
+
+# This experiment corresponds to Section 4 in Verde (2019).
 #
 # Experiment: Combining aggretated data from RCTs and a single
 # observational study with individual participant data.
@@ -454,8 +494,10 @@ abline(v =2.5, lty = 2, lwd = 2)
 
 }
 \references{
-Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis and combining randomized and nonrandomized results: a case study in diabetes. Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
+Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis
+ and combining randomized and nonrandomized results: a case study in diabetes.
+ Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
 
-Verde, P.E. (2019) The hierarchical meta-regression approach and learning from clinical evidence.
-Biometrical Journal. 1 - 23.
+Verde, P.E. (2019) The hierarchical meta-regression approach and learning from
+ clinical evidence. Biometrical Journal. 1 - 23.
 }

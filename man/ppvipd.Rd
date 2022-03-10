@@ -4,7 +4,8 @@
 \name{ppvipd}
 \alias{ppvipd}
 \title{Efficacy of Pneumococcal Polysaccharide Vaccine in Preventing Invasive Pneumococcal Disease}
-\format{A matrix with 11 rows and 6 columns. Each row represents study results, the columns are:
+\format{
+A matrix with 11 rows and 6 columns. Each row represents study results, the columns are:
    \describe{
     \item{name}{Name of the first author and year.}
     \item{TE}{Treatment Effect as Log Odds Ratio.}
@@ -12,7 +13,8 @@
     \item{n.v}{Number of patients in the vaccination group.}
     \item{n.c}{Number of patients in the control group.}
     \item{design}{Description of the study design.}
-    }}
+    }
+}
 \source{
 The data were obtainded from: Falkenhorst et al. (2017).
 }
