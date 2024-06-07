@@ -7,10 +7,9 @@
 #' @param x.lab Text with the label of the x-axis.
 #' @param y.lab Text with the label of the y-axis.
 #' @param title.plot Text for setting a title in the plot.
-#'
-#' @param names Add IPD names to the plot.
-#'
-#' @param name.side Set the side of each name in the plot relative to the vertical line.
+#' @param AD.colour Colour of the location of the baseline risk of the aggregated data AD
+#' @param IPD.colour Colour of the location of the baseline risk of the individual participant data (IPD) data
+#' @param Study.Types Vector of text for the label of the study types
 #'
 #' @param ... \dots
 #'
@@ -19,33 +18,21 @@
 plot.hmr = function(x,
                     x.lim = c(-5, 2.8),
                     y.lim = c(-2, 1.0),
-                    x.lab = "Rate of The Control Group (logit scale)",
-                    y.lab = "No improvement <- Treatment effect -> Improvement",
-                    title.plot = "Treatment Effect Against Baseline Risk",
-                    names=NULL,
-                    name.side=NULL, ...) {
+                    x.lab = "Event rate of The Control Group (logit scale)",
+                    y.lab = "No improvement <- Effectiveness -> Improvement",
+                    title.plot = "HMR: Effectiveness Against Baseline Risk",
+                    AD.colour = "red",
+                    IPD.colour = "blue",
+                    Study.Types = c("AD-RCTs", "IPD-RWD"),
+                    ...) {
 
   x.axis=x.end=Design=upper.hat=lower.hat=logitPc=TE=seTE=NULL
   x.line=median.hat=y.axis=y.end=NULL
-
-  if (missing(names) & !missing(name.side))stop("name.side must have same length as names.")
-
-  if (missing(names)) names = c()
-  if (missing(name.side)) {
-    name.side = c()
-    for (n in names) {
-      name.side = c(name.side, "right")
-    }
-  }
-
-  if ((length(names) != length(name.side)))stop("names and name.side must have the same length.")
-
-
   object = x
 
   # External validity
-  a0.f = object$BUGSoutput$sims.list$beta.0 # Intercept centered at the mean baseline risk mu.1.
-  b0.f = object$BUGSoutput$sims.list$beta.1 # Slope between baseline risk and relative treatment effect.
+  a0.f = object$BUGSoutput$sims.list$alpha.0 # Intercept centered at the mean baseline risk mu.1.
+  b0.f = object$BUGSoutput$sims.list$alpha.1 # Slope between baseline risk and relative treatment effect.
 
   x = seq(x.lim[1], x.lim[2], length = 50)
 
@@ -57,7 +44,6 @@ plot.hmr = function(x,
   y.f2 = rep(0, length(x)*B)
   dim(y.f2) = c(length(x), B)
 
-
   for(i in 1:length(x)) {
     y.f[i, ] = a0.f + b0.f*x[i]
   }
@@ -68,7 +54,6 @@ plot.hmr = function(x,
                          upper.hat  = apply(y.f, 1, quantile, prob=0.95),
                          lower.hat  = apply(y.f, 1, quantile, prob=0.05))
   #############################################################################
-
   dat = object$data
   incr.e = 1
   incr.c = 1
@@ -88,6 +73,7 @@ plot.hmr = function(x,
 
   dat$TE = log(((n11 + incr.e) * (n22 + incr.c)) /
                  ((n12 + incr.e) * (n21 + incr.c)))
+
   dat$seTE = sqrt((1/(n11 + incr.e) + 1/(n12 + incr.e) +
                      1/(n21 + incr.c) + 1/(n22 + incr.c)))
 
@@ -102,70 +88,40 @@ plot.hmr = function(x,
                           logitPc = dat$logitPc,
                           N.total = dat$nt + dat$nc)
 
-  mu.phi = object$BUGSoutput$sims.list$mu.phi
-  mu.1 = object$BUGSoutput$sims.list$mu.1
-  beta.IPD = object$BUGSoutput$sims.list$beta.IPD
-  colnames(beta.IPD) = object$beta.names
+    mu.phi = object$BUGSoutput$sims.list$mu.phi
+      mu.1 = object$BUGSoutput$sims.list$mu.1
 
-  x.axis = c(mean(mu.1) + 0.7,
-             mean(mu.1 + mu.phi) + 0.7)
-  x.end = c(mean(mu.1),
-            mean(mu.1 + mu.phi))
-  for (i in 1:length(names)) {
-    n = paste0("beta.", names[i])
-    if (n %in% colnames(beta.IPD)) {
-      if (name.side[i] == "left") offset = -1
-      else offset = 0.7
-      x.axis = c(x.axis, mean(mu.1 - mu.phi + beta.IPD[,n] + offset))
-      x.end = c(x.end, mean(mu.1 - mu.phi + beta.IPD[,n]))
-    } else {
-      warning(paste("name", names[i], "not found in IPD names"))
-    }
-  }
+  X.baseline = c(mean(mu.1), mean(mu.1 + mu.phi))
 
-  vlines = data.frame(x.axis = x.axis,
-                      x.end = x.end,
-                      y.axis = -1.3,
-                      y.end = -1.8,
-                      text = c("RCT", "OS", names),
-                      Design = c("RCT", "OS", rep("RCT+OS", length(names))))
-
+  vlines = data.frame(X.baseline = X.baseline,
+                      Study.Types = Study.Types)
 
   p = ggplot(dat.lines, aes(x = x.line, y = median.hat)) +
+    # Posterior intervals for the line  between TE and Baseline risk ...
+        geom_line(aes(x = x.line, y = median.hat), colour = "black", size = 1.5) +
+        geom_line(aes(x = x.line, y = upper.hat), colour = "black", size = 1.5) +
+        geom_line(aes(x = x.line, y = lower.hat), colour = "black", size = 1.5) +
         scale_x_continuous(name = x.lab, limits = x.lim) +
         scale_y_continuous(name = y.lab, limits = y.lim)+
-        geom_text(data = vlines,           ## Text for baseline risk groups
-              aes(label = text,
-                  x = x.axis ,
-                  y = y.axis )) +
-        geom_segment(data = vlines,
-                 aes(x = x.axis ,       ## Start of arrow on x axis
-                     xend = x.end  ,    ## End of arrow on x axis
-                     y = y.axis - 0.1,  ## Start of arrow on y axis
-                     yend = y.end ),    ## End of arrow on y axis
-                 size = 1,
-                 arrow = arrow(length = unit(0.3, "cm")) ) +
-    # Location of  groups' baseline
-    geom_vline(data = vlines, aes(xintercept = x.end,
-                                  colour = Design, lty = Design),
-               size = 1.5) +
-    scale_color_manual(values=c("red", "blue","black")) +
-    # Posterior intervals for the line  between TE and Baseline risk ...
-    geom_line(aes(x = x.line, y = median.hat), colour = "black", size = 1.5) +
-    geom_line(aes(x = x.line, y = upper.hat), colour = "black", size = 1.5) +
-    geom_line(aes(x = x.line, y = lower.hat), colour = "black", size = 1.5) +
-    # Refrence line at no effect
-    geom_hline(yintercept = 0, colour = "black", size = 0.5, lty = 2) +
-    scale_size_area(max_size = 10) +
+    # Reference horizontal line at no effect ...
+        geom_hline(yintercept = 0, colour = "black", size = 0.5, lty = 2) +
+    # Location of baselines AD and IPD
+        geom_vline(data = vlines,
+               aes(xintercept = X.baseline,
+                   colour = Study.Types,
+                   lty = Study.Types),
+                   size = 1.5) +
+    scale_color_manual(values= c(AD.colour, IPD.colour))+
     # Forest plot for studies' results
-    geom_pointrange(data = dat.points,
+        geom_pointrange(data = dat.points,
                     aes(x = logitPc,
                         y = TE,
                         ymin = TE - seTE,
                         ymax = TE + seTE),
-                    lwd = 0.8, alpha = 0.5) +
-    ggtitle(title.plot)+
-    theme_bw()
+                        lwd = 0.8, alpha = 0.25) +
+        ggtitle(title.plot)+ theme_bw()
+
 
   return(suppressWarnings(print(p)))
 }
+

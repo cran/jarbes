@@ -2,7 +2,7 @@
 % Please edit documentation in R/hmr.R
 \name{hmr}
 \alias{hmr}
-\title{Bayesian meta-analysis for cross-design synthesis.}
+\title{Bayesian meta-analysis to combine aggregated and individual participant data for cross design synthesis.}
 \usage{
 hmr(
   data,
@@ -114,24 +114,30 @@ The default value is FALSE.}
 This function returns an object of the class "hmr". This object contains the MCMC output of
 each parameter and hyper-parameter in the model, the data frame used for fitting the model, the link function,
 type of random effects distribution and the splitting information for conflict of evidence analysis.
+
 The results of the object of the class metadiag can be extracted with R2jags or with rjags. In addition
 a summary, a print and a plot function are implemented for this type of object.
 }
 \description{
-This function performers a Bayesian cross-design synthesis. The function fits a
+This function performers a Bayesian cross design synthesis. The function fits a
 hierarchical meta-regression model based on a bivariate random effects model.
-The number of events in the control and treated group are modeled with two
-conditional Binomial distributions and the random-effects are based on a
-bivariate scale mixture of Normals. The individual participant data is modeled
-as a Bayesian logistic regression for participants in the control group.
-Coefficients in the regression are modeled as exchangeables.
 }
 \details{
+The number of events in the control and treated group are modeled with two
+conditional Binomial distributions and the random-effects are based on a
+bivariate scale mixture of Normals.
+
+The individual participant data is modeled as a Bayesian logistic regression for
+participants in the control group. Coefficients in the regression are modeled as
+exchangeables.
+
 The function calculates the implicit hierarchical meta-regression, where the
 treatment effect is regressed to the baseline risk (rate of events in the control
 group). The scale mixture weights are used to adjust for internal validity and
-structural outliers identification. This is used to predict the treatment effect for
-subgroups of individual participant data.
+structural outliers identification.
+
+The implicit hierarchical meta-regression is used to predict the treatment effect
+for subgroups of individual participant data.
 
 Computations are done by calling JAGS (Just Another Gibbs Sampler) to perform
 MCMC (Markov Chain Monte Carlo) sampling and returning an object of the
@@ -145,14 +151,8 @@ be installed with the installation program JAGS-4.2.0-Rtools33.exe. For users wh
 an earlier version, the installation program for JAGS is the default installer JAGS-4.2.0.exe.
 }
 \examples{
+
 \dontrun{
-
-# Examples of new plot and diagnostic functions for version >= 2.0.0
-
-
-
-# Example: from Verde 2019, Section 5
-
 library(jarbes)
 
 data("healing")
@@ -184,23 +184,12 @@ mx2 <- hmr(AD, two.by.two = FALSE,
            nr.adapt = 100,
            nr.thin = 1)
 
-
-summary(mx2)
-plot(mx2, names = c("PAD", "dialysis", "male"))
-
-diagnostic(mx2)
-
-diagnostic(mx2, mu.phi = FALSE, study.names = healing$Study)
-
-diagnostic(mx2, study.names = healing$Study)
-
-betaplot(mx2)
+print(mx2)
 
 
 
 
-
-# This experiment corresponds to Section 4 in Verde (2019).
+# This experiment corresponds to Section 4 in Verde (2018).
 #
 # Experiment: Combining aggretated data from RCTs and a single
 # observational study with individual participant data.
@@ -212,7 +201,7 @@ betaplot(mx2)
 # We run two simulated data: 1) mu.phi = 0.5 which is diffucult to
 # identify. 2) mu.phi = 2 which can be identify. The simulations are
 # used to see if the hmr() function can recover mu.phi.
-
+#
 
 
 library(MASS)
@@ -220,7 +209,6 @@ library(ggplot2)
 library(jarbes)
 library(gridExtra)
 library(mcmcplots)
-library(R2jags)
 
 
 # Simulation of the IPD data
@@ -231,33 +219,6 @@ invlogit <- function (x)
 }
 
 # Data set for mu.phi = 0.5 .........................................
-
-# Parameters Aggregated Data:
-
-# mean control
-pc <- 0.7
-# mean treatment
-pt <- 0.4
-# reduction of "amputations" odds ratio
-OR <- (pt/(1-pt)) /(pc/(1-pc))
-# mu_2: treatment effect ...
-log(OR)
-mu.2.true <- log(OR)
-# mu_1
-mu.1.true <- log(pc/(1-pc)) # Baseline risk
-mu.1.true
-#sigma_1 # Between studies variability
-sigma.1.true <- 1
-#sigma_2
-sigma.2.true <- 0.5
-# rho: correlation between treatment effect and baseline risk
-rho.true <- -0.5
-
-Sigma <- matrix(c(sigma.1.true^2, sigma.1.true*sigma.2.true*rho.true,
-                  sigma.1.true*sigma.2.true*rho.true, sigma.2.true^2),
-                  byrow = TRUE, ncol = 2)
-
-# Parameters values IPD
 
 # Parameters values
 mu.phi.true <- 0.5
@@ -301,57 +262,8 @@ colnames(noise) <- n.names
 
 data.IPD <- data.frame(y, x1, x2, noise)
 
-# Aggregated Data
 
-# Experiment 1: External validity bias
-theta <- mvrnorm(35, mu = c(mu.1.true, mu.2.true),
-                  Sigma = Sigma )
-
- plot(theta, xlim = c(-2,3))
- abline(v=mu.1.true, lty = 2)
- abline(h=mu.2.true, lty = 2)
- abline(a = mu.2.true, b=sigma.2.true/sigma.1.true * rho.true, col = "red")
- abline(lm(theta[,2]~theta[,1]), col = "blue")
- # Target group
- mu.T <- mu.1.true + 2 * sigma.1.true
- abline(v=mu.T, lwd = 3, col = "blue")
- eta.true <- mu.2.true + sigma.2.true/sigma.1.true*rho.true* mu.T
- eta.true
- exp(eta.true)
- abline(h = eta.true, lty =3, col = "blue")
- # Simulation of each primary study:
- n.c <- round(runif(35, min = 30, max = 60),0)
- n.t <- round(runif(35, min = 30, max = 60),0)
- y.c <- y.t <- rep(0, 35)
- p.c <- exp(theta[,1])/(1+exp(theta[,1]))
- p.t <- exp(theta[,2]+theta[,1])/(1+exp(theta[,2]+theta[,1]))
- for(i in 1:35)
- {
-   y.c[i] <- rbinom(1, n.c[i], prob = p.c[i])
-   y.t[i] <- rbinom(1, n.t[i], prob = p.t[i])
- }
-
- AD.s1 <- data.frame(yc=y.c, nc=n.c, yt=y.t, nt=n.t)
-
-
- incr.e <- 0.05
- incr.c <- 0.05
- n11 <- AD.s1$yt
- n12 <- AD.s1$yc
- n21 <- AD.s1$nt - AD.s1$yt
- n22 <- AD.s1$nc - AD.s1$yc
- AD.s1$TE <- log(((n11 + incr.e) * (n22 + incr.c))/((n12 + incr.e) * (n21 + incr.c)))
- AD.s1$seTE <- sqrt((1/(n11 + incr.e) + 1/(n12 + incr.e) +
-                       1/(n21 + incr.c) + 1/(n22 + incr.c)))
-
- Pc <- ((n12 + incr.c)/(AD.s1$nc + 2*incr.c))
-
- AD.s1$logitPc <- log(Pc/(1-Pc))
-
- AD.s1$Ntotal <- AD.s1$nc + AD.s1$nt
-  rm(list=c("Pc", "n11","n12","n21","n22","incr.c", "incr.e"))
-
-# Application of HMR .......................................
+# Application of HMR ...........................................
 
 res.s2 <- hmr(AD.s1, two.by.two = FALSE,
              dataIPD = data.IPD,
@@ -365,7 +277,7 @@ res.s2 <- hmr(AD.s1, two.by.two = FALSE,
 
 print(res.s2)
 
-# Data set for mu.phi = 2 ..................................
+# Data set for mu.phi = 2 ......................................
 # Parameters values
 
 mu.phi.true <- 2
@@ -404,6 +316,7 @@ colnames(noise) <- n.names
 data.IPD <- data.frame(y, x1, x2, noise)
 
 # Application of HMR ................................................
+
 
 res.s3 <- hmr(AD.s1, two.by.two = FALSE,
              dataIPD = data.IPD,
@@ -454,10 +367,11 @@ p2 <- ggplot(df.phi.1, aes(x=x))+
 grid.arrange(p1, p2, ncol = 2, nrow = 1)
 
 
-# Catter plots for regression coefficients ...........................
-library(rjags)
+# Cater plots for regression coefficients ...........................
+
 var.names <- names(data.IPD[-1])
 v <- paste("beta", names(data.IPD[-1]), sep = ".")
+mcmc.x <- as.rjags.mcmc(res.s2$BUGSoutput$sims.matrix)
 mcmc.x.2 <- as.mcmc.rjags(res.s2)
 mcmc.x.3 <- as.mcmc.rjags(res.s3)
 
@@ -468,21 +382,21 @@ caterplot(mcmc.x.2,
          parms = par.names,
          col = "black", lty = 1,
          labels = greek.names,
-         greek = TRUE,
+         greek = T,
          labels.loc="axis", cex =0.7,
-         style = "plain",reorder = FALSE,
-         denstrip = FALSE)
+         style = "plain",reorder = F, denstrip = F)
 
 caterplot(mcmc.x.3,
          parms = par.names,
          col = "grey", lty = 2,
          labels = greek.names,
-         greek = TRUE,
+         greek = T,
          labels.loc="axis", cex =0.7,
-         style = "plain", reorder = FALSE,
-         denstrip = FALSE,
+         style = "plain",reorder = F, denstrip = F,
          add = TRUE,
          collapse=TRUE, cat.shift=-0.5)
+
+
 
 abline(v=0, lty = 2, lwd = 2)
 abline(v =2, lty = 2, lwd = 2)
@@ -492,12 +406,12 @@ abline(v =2.5, lty = 2, lwd = 2)
 
 }
 
+
 }
 \references{
-Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis
- and combining randomized and nonrandomized results: a case study in diabetes.
- Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
+Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis and combining randomized and nonrandomized results: a case study in diabetes. Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
 
-Verde, P.E. (2019) The hierarchical meta-regression approach and learning from
- clinical evidence. Biometrical Journal. 1 - 23.
+Verde, P.E. (2017) The hierarchical meta-regression approach and learning from clinical evidence. Submited to the Biometrical Journal.
+
+Verde, P.E. (2018) The Hierarchical Meta-Regression Approach and Learning from Clinical Evidence. Technical report.
 }

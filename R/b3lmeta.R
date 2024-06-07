@@ -118,6 +118,9 @@ b3lmeta.default = function(
   se.y = data$seTE[order(data$TE)]
 
   N = length(y)
+
+ # if(N<3)stop("Low number of studies in the meta-analysis!")
+
   x = data$design[order(data$TE)]
   x = as.numeric(x)
   Ndesign <- length(table(x))
@@ -159,7 +162,8 @@ b3lmeta.default = function(
   # Between designs variability ....................................
     for(i in 1:Ndesign){
       mu[i] ~ dnorm(mu.0, pre.between)
-      }
+    }
+
 
   # Priors for hyper-parameters ................................
     tau.theta.between <- 1/sqrt(pre.between)

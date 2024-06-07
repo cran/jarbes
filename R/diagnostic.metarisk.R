@@ -80,12 +80,11 @@ diagnostic.metarisk = function(object,
   }
 
   p = ggplot(dat.weights, aes(x = x, y = y,
-                              ymin = ylo, ymax = yhi,
-                              size = size.forest      # Point size
-                              )) +
+                              ymin = ylo, ymax = yhi)) +
         geom_pointrange(colour = w.col,
                       lwd = lwd.forest,      # Thickness of the lines
-                    shape = shape.forest)+
+                    shape = shape.forest,
+                     size = size.forest ) +  # Point size
     coord_flip() +
     geom_hline(yintercept = 1, lty = 2) +
     xlab("Study") +

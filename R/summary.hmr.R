@@ -21,7 +21,7 @@ summary.hmr = function(object, digits = 3, ...) {
   summary.h$model.specification = model.spec
 
   # FE's
-  summary.h$summary.fe = bugs.summary[c("mu.1", "mu.2", "beta.0", "beta.1",
+  summary.h$summary.fe = bugs.summary[c("mu.1", "mu.2", "alpha.0", "alpha.1",
                                         "Odds.pool", "P_control.pool"),]
   row.names(summary.h$summary.fe)[c(3, 4)] = c("intercept", "slope")
 
@@ -37,14 +37,14 @@ summary.hmr = function(object, digits = 3, ...) {
                                                       colnames(bugs.summary)))
 
   # predictive effects
-  summary.h$summary.predictive.effects = bugs.summary[c("Odds.new",
-                                                        "P_control.new"),]
+  # summary.h$summary.predictive.effects = bugs.summary[c("Odds.new",
+  #                                                       "P_control.new"),]
 
   # IPD Predictors
   ind.names = grep("beta.IPD", row.names(bugs.summary))
   summary.h$summary.IPD.predictors = rbind(bugs.summary["sigma.beta",],
                                            bugs.summary[ind.names,])
-  row.names(summary.h$summary.IPD.predictors) = c("sigma.beta (regularization parameter)",
+  row.names(summary.h$summary.IPD.predictors) = c("sigma.beta",
                                                   object$beta.names)
 
   # MCMC info
@@ -62,6 +62,8 @@ summary.hmr = function(object, digits = 3, ...) {
   print(summary.h, digits = digits)
 }
 
+#' @export
+#'
 print.summary.hmr = function(x, digits, ...) {
   cat('Model specification:\n')
   model.spec = x$model.specification
@@ -90,10 +92,10 @@ print.summary.hmr = function(x, digits, ...) {
 
   cat('\n-------------------\n')
 
-  cat('Predictive effects:\n')
-  print(round(x$summary.predictive.effects, digits))
-
-  cat('\n-------------------\n')
+  # cat('Predictive effects:\n')
+  # print(round(x$summary.predictive.effects, digits))
+  #
+  # cat('\n-------------------\n')
 
   cat('Idividual Participant Data Predictors:\n')
   print(round(x$summary.IPD.predictors, digits))
@@ -108,3 +110,5 @@ print.summary.hmr = function(x, digits, ...) {
   cat(paste('pD: ', round(x$pD, digits), sep = ''))
   cat('\n')
 }
+
+

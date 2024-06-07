@@ -1,3 +1,38 @@
+#' Meta-analysis:
+#'
+#'
+#' @name hips
+#'
+#' @docType data
+#'
+#' @description
+#'
+#' Meta-analysis of 15 studies investigating total hip replacement to compare the risk of revision of
+#' cemented and uncemented implantfixation modalities, by pooling
+#' treatment effectestimates from OS and RCTs.
+#'
+#' @format  A dataframe with 15 rows and 12 columns. Each row represents study results, the columns are:
+#'    \describe{
+#'     \item{Study}{Author and year.}
+#'     \item{Study_type}{Study desing.}
+#'     \item{N_of_revisions}{Number of revisions.}
+#'     \item{Total_cemented}{Total number of cemmented cases.}
+#'     \item{N_of_revisions_uncemented}{Number of uncemented revisions.}
+#'     \item{Total_uncemented}{Total number of uncemmented cases.}
+#'     \item{Relative_risks_computed}{RR calculated from the two by two table.}
+#'     \item{L95CI}{Lower 95prc CI}
+#'     \item{U95CI}{Upper 95prc CI}
+#'     \item{mean_age}{Mean age of the study}
+#'     \item{proportion_of_women}{Proportion of women in the study.}
+#'     \item{Follow_up}{Time to follow-up in years.}
+#'     }
+#'
+#' @source  Schnell-Inderst P, Iglesias CP, Arvandi M, Ciani O, Matteucci Gothe R, Peters J, Blom AW, Taylor RS and Siebert U (2017). A bias-adjusted evidence synthesis of RCT and observational data: the case of total hip replacement. Health Econ. 26(Suppl. 1): 46–69.
+#'
+#' @keywords datasets
+#'
+#'
+
 NULL
 
 #' Meta-analysis: Observational studies assessing the relationship of
@@ -42,7 +77,7 @@ NULL
 #'
 #' @description
 #'
-#' Meta-analysis of 40 Observational Studies from PubMed, Cochrane Library and SciELO databases
+#' Meta-analysis of 40 Observational Studies from PubMed, Cocharane Library and SciELO databases
 #' that assessed the impact of diabetes, hypertension, cardiovascular disease,
 #' and the use of ACEI/ARB on severity and mortality of COVID-19 cases.
 #'

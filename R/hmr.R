@@ -1,14 +1,35 @@
-#' @title Bayesian meta-analysis for cross-design synthesis.
+#' Bayesian meta-analysis to combine aggregated and individual participant data for cross design synthesis.
 #'
 #'
-#' @description This function performers a Bayesian cross-design synthesis. The function fits a
+#' This function performers a Bayesian cross design synthesis. The function fits a
 #' hierarchical meta-regression model based on a bivariate random effects model.
+#'
 #' The number of events in the control and treated group are modeled with two
 #' conditional Binomial distributions and the random-effects are based on a
-#' bivariate scale mixture of Normals. The individual participant data is modeled
-#' as a Bayesian logistic regression for participants in the control group.
-#' Coefficients in the regression are modeled as exchangeables.
+#' bivariate scale mixture of Normals.
 #'
+#' The individual participant data is modeled as a Bayesian logistic regression for
+#' participants in the control group. Coefficients in the regression are modeled as
+#' exchangeables.
+#'
+#' The function calculates the implicit hierarchical meta-regression, where the
+#' treatment effect is regressed to the baseline risk (rate of events in the control
+#' group). The scale mixture weights are used to adjust for internal validity and
+#' structural outliers identification.
+#'
+#' The implicit hierarchical meta-regression is used to predict the treatment effect
+#' for subgroups of individual participant data.
+#'
+#' Computations are done by calling JAGS (Just Another Gibbs Sampler) to perform
+#' MCMC (Markov Chain Monte Carlo) sampling and returning an object of the
+#' class \emph{mcmc.list}.
+#'
+#' Installation of JAGS: It is important to note that R 3.3.0 introduced a major change in the
+#' use of toolchain for Windows. This new toolchain is incompatible with older packages written in C++.
+#' As a consequence, if the installed version of JAGS does not match the R installation, then the rjags
+#' package will spontaneously crash. Therefore, if a user works with R version >= 3.3.0, then JAGS must
+#' be installed with the installation program JAGS-4.2.0-Rtools33.exe. For users who continue using R 3.2.4 or
+#' an earlier version, the installation program for JAGS is the default installer JAGS-4.2.0.exe.
 #'
 #'
 #' @param data            Aggregated data results: a data frame where the first four columns containing the number of events in
@@ -93,123 +114,20 @@
 #' @return This function returns an object of the class "hmr". This object contains the MCMC output of
 #' each parameter and hyper-parameter in the model, the data frame used for fitting the model, the link function,
 #' type of random effects distribution and the splitting information for conflict of evidence analysis.
+#'
 #' The results of the object of the class metadiag can be extracted with R2jags or with rjags. In addition
 #' a summary, a print and a plot function are implemented for this type of object.
 #'
-#' @details The function calculates the implicit hierarchical meta-regression, where the
-#' treatment effect is regressed to the baseline risk (rate of events in the control
-#' group). The scale mixture weights are used to adjust for internal validity and
-#' structural outliers identification. This is used to predict the treatment effect for
-#' subgroups of individual participant data.
+#' @references Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis and combining randomized and nonrandomized results: a case study in diabetes. Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
 #'
-#' Computations are done by calling JAGS (Just Another Gibbs Sampler) to perform
-#' MCMC (Markov Chain Monte Carlo) sampling and returning an object of the
-#' class \emph{mcmc.list}.
+#' @references Verde, P.E. (2017) The hierarchical meta-regression approach and learning from clinical evidence. Submited to the Biometrical Journal.
 #'
-#' Installation of JAGS: It is important to note that R 3.3.0 introduced a major change in the
-#' use of toolchain for Windows. This new toolchain is incompatible with older packages written in C++.
-#' As a consequence, if the installed version of JAGS does not match the R installation, then the rjags
-#' package will spontaneously crash. Therefore, if a user works with R version >= 3.3.0, then JAGS must
-#' be installed with the installation program JAGS-4.2.0-Rtools33.exe. For users who continue using R 3.2.4 or
-#' an earlier version, the installation program for JAGS is the default installer JAGS-4.2.0.exe.
-#'
-#' @references Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis
-#'  and combining randomized and nonrandomized results: a case study in diabetes.
-#'  Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
-#'
-#' @references Verde, P.E. (2019) The hierarchical meta-regression approach and learning from
-#'  clinical evidence. Biometrical Journal. 1 - 23.
-#'
+#' @references Verde, P.E. (2018) The Hierarchical Meta-Regression Approach and Learning from Clinical Evidence. Technical report.
 #'
 #' @examples
-#' \dontrun{
 #'
-#' # Examples of new plot and diagnostic functions for version >= 2.0.0
-#
-# # hmr split.w == FALSE
-#
-# data("healing")
-# AD <- healing[, c("y_c", "n_c", "y_t", "n_t")]
-#
-# data("healingipd")
-#
-# IPD <- healingipd[, c("healing.without.amp", "PAD", "neuropathy",
-#                       "first.ever.lesion", "no.continuous.care",
-#                       "male", "diab.typ2",
-#                       "insulin", "HOCHD",
-#                       "HOS", "CRF", "dialysis",
-#                       "DNOAP", "smoking.ever",
-#                       "wagner.class")]
-#
-# mx2 <- hmr(AD, two.by.two = FALSE,
-#            dataIPD = IPD,
-#            re = "sm",
-#            link = "logit",
-#            sd.mu.1 = 2,
-#            sd.mu.2 = 2,
-#            mean.mu.phi = 0,
-#            sd.mu.phi = 1,
-#            sigma.1.upper = 5,
-#            sigma.2.upper = 5,
-#            sigma.beta.upper = 5,
-#            sd.Fisher.rho = 1.25,
-#            df.estimate = FALSE,
-#            df.lower = 3,
-#            df.upper = 10,
-#            nr.chains = 1,
-#            nr.iterations = 1500,
-#            nr.adapt = 100,
-#            nr.thin = 1)
-#
-# summary(mx2)
-#
-# plot(mx2, names = c("PAD", "wagner.class"),
-#      name.side = c("right", "left"),
-#      x.lim = c(-6, 3.5), y.lim = c(-2, 4))
-#
-# diagnostic(mx2, study.names = healing$Study)
-#
-# diagnostic(mx2, mu.phi = FALSE, study.names = healing$Study)
-#
-# # hmr split.w == TRUE
-#
-# mx3 <- hmr(AD, two.by.two = FALSE,
-#            dataIPD = IPD,
-#            re = "sm",
-#            link = "logit",
-#            split.w = TRUE,
-#            sd.mu.1 = 2,
-#            sd.mu.2 = 2,
-#            sd.mu.phi = 1,
-#            sigma.1.upper = 5,
-#            sigma.2.upper = 5,
-#            sigma.beta.upper = 5,
-#            sd.Fisher.rho = 1.25,
-#            df.estimate = FALSE,
-#            df.lower = 3,
-#            df.upper = 10,
-#            nr.chains = 1,
-#            nr.iterations = 1500,
-#            nr.adapt = 100,
-#            nr.thin = 1)
-#
-# summary(mx3)
-#
-# plot(mx3, x.lim = c(-6, 5), names = c("PAD"), name.side = c("left"))
-#
-# plot(mx3, x.lim = c(-6, 5),y.lim = c(-2,3))
-#
-# diagnostic(mx3, study.names = healing$Study)
-#
-# diagnostic(mx3, mu.phi = FALSE, study.names = healing$Study)
-#
-#
-#'
-#'
-#'
-#' # Example: from Verde 2019, Section 5
-#'
-#' library(jarbes)
+#'\dontrun{
+#'library(jarbes)
 #'
 #' data("healing")
 #' AD <- healing[, c("y_c", "n_c", "y_t", "n_t")]
@@ -240,23 +158,12 @@
 #'            nr.adapt = 100,
 #'            nr.thin = 1)
 #'
-#'
-#' summary(mx2)
-#' plot(mx2, names = c("PAD", "dialysis", "male"))
-#'
-#' diagnostic(mx2)
-#'
-#' diagnostic(mx2, mu.phi = FALSE, study.names = healing$Study)
-#'
-#' diagnostic(mx2, study.names = healing$Study)
-#'
-#' betaplot(mx2)
+#' print(mx2)
 #'
 #'
 #'
 #'
-#'
-#'# This experiment corresponds to Section 4 in Verde (2019).
+#'# This experiment corresponds to Section 4 in Verde (2018).
 #'#
 #'# Experiment: Combining aggretated data from RCTs and a single
 #'# observational study with individual participant data.
@@ -268,7 +175,7 @@
 #'# We run two simulated data: 1) mu.phi = 0.5 which is diffucult to
 #'# identify. 2) mu.phi = 2 which can be identify. The simulations are
 #'# used to see if the hmr() function can recover mu.phi.
-#'
+#'#
 #'
 #'
 #'library(MASS)
@@ -276,7 +183,6 @@
 #'library(jarbes)
 #'library(gridExtra)
 #'library(mcmcplots)
-#'library(R2jags)
 #'
 #'
 #'# Simulation of the IPD data
@@ -287,33 +193,6 @@
 #'}
 #'
 #'# Data set for mu.phi = 0.5 .........................................
-#'
-#' # Parameters Aggregated Data:
-#'
-#' # mean control
-#' pc <- 0.7
-#' # mean treatment
-#' pt <- 0.4
-#' # reduction of "amputations" odds ratio
-#' OR <- (pt/(1-pt)) /(pc/(1-pc))
-#' # mu_2: treatment effect ...
-#' log(OR)
-#' mu.2.true <- log(OR)
-#' # mu_1
-#' mu.1.true <- log(pc/(1-pc)) # Baseline risk
-#' mu.1.true
-#' #sigma_1 # Between studies variability
-#' sigma.1.true <- 1
-#' #sigma_2
-#' sigma.2.true <- 0.5
-#' # rho: correlation between treatment effect and baseline risk
-#' rho.true <- -0.5
-#'
-#' Sigma <- matrix(c(sigma.1.true^2, sigma.1.true*sigma.2.true*rho.true,
-#'                   sigma.1.true*sigma.2.true*rho.true, sigma.2.true^2),
-#'                   byrow = TRUE, ncol = 2)
-#'
-#' # Parameters values IPD
 #'
 #'# Parameters values
 #'mu.phi.true <- 0.5
@@ -357,59 +236,8 @@
 #'
 #'data.IPD <- data.frame(y, x1, x2, noise)
 #'
-#' # Aggregated Data
 #'
-#' # Experiment 1: External validity bias
-#
-#' theta <- mvrnorm(35, mu = c(mu.1.true, mu.2.true),
-#'                   Sigma = Sigma )
-#'
-#'  plot(theta, xlim = c(-2,3))
-#'  abline(v=mu.1.true, lty = 2)
-#'  abline(h=mu.2.true, lty = 2)
-#'  abline(a = mu.2.true, b=sigma.2.true/sigma.1.true * rho.true, col = "red")
-#'  abline(lm(theta[,2]~theta[,1]), col = "blue")
-#
-#'  # Target group
-#'  mu.T <- mu.1.true + 2 * sigma.1.true
-#'  abline(v=mu.T, lwd = 3, col = "blue")
-#'  eta.true <- mu.2.true + sigma.2.true/sigma.1.true*rho.true* mu.T
-#'  eta.true
-#'  exp(eta.true)
-#'  abline(h = eta.true, lty =3, col = "blue")
-#'  # Simulation of each primary study:
-#'  n.c <- round(runif(35, min = 30, max = 60),0)
-#'  n.t <- round(runif(35, min = 30, max = 60),0)
-#'  y.c <- y.t <- rep(0, 35)
-#'  p.c <- exp(theta[,1])/(1+exp(theta[,1]))
-#'  p.t <- exp(theta[,2]+theta[,1])/(1+exp(theta[,2]+theta[,1]))
-#'  for(i in 1:35)
-#'  {
-#'    y.c[i] <- rbinom(1, n.c[i], prob = p.c[i])
-#'    y.t[i] <- rbinom(1, n.t[i], prob = p.t[i])
-#'  }
-#'
-#'  AD.s1 <- data.frame(yc=y.c, nc=n.c, yt=y.t, nt=n.t)
-#'
-#'
-#'  incr.e <- 0.05
-#'  incr.c <- 0.05
-#'  n11 <- AD.s1$yt
-#'  n12 <- AD.s1$yc
-#'  n21 <- AD.s1$nt - AD.s1$yt
-#'  n22 <- AD.s1$nc - AD.s1$yc
-#'  AD.s1$TE <- log(((n11 + incr.e) * (n22 + incr.c))/((n12 + incr.e) * (n21 + incr.c)))
-#'  AD.s1$seTE <- sqrt((1/(n11 + incr.e) + 1/(n12 + incr.e) +
-#'                        1/(n21 + incr.c) + 1/(n22 + incr.c)))
-#'
-#'  Pc <- ((n12 + incr.c)/(AD.s1$nc + 2*incr.c))
-#'
-#'  AD.s1$logitPc <- log(Pc/(1-Pc))
-#'
-#'  AD.s1$Ntotal <- AD.s1$nc + AD.s1$nt
-#'   rm(list=c("Pc", "n11","n12","n21","n22","incr.c", "incr.e"))
-#'
-#'# Application of HMR .......................................
+#'# Application of HMR ...........................................
 #'
 #'res.s2 <- hmr(AD.s1, two.by.two = FALSE,
 #'              dataIPD = data.IPD,
@@ -423,7 +251,7 @@
 #'
 #'print(res.s2)
 #'
-#'# Data set for mu.phi = 2 ..................................
+#'# Data set for mu.phi = 2 ......................................
 #'# Parameters values
 #'
 #'mu.phi.true <- 2
@@ -463,6 +291,7 @@
 #'
 #'# Application of HMR ................................................
 #'
+#'
 #'res.s3 <- hmr(AD.s1, two.by.two = FALSE,
 #'              dataIPD = data.IPD,
 #'              sd.mu.1 = 2,
@@ -476,16 +305,16 @@
 #'print(res.s3)
 #'
 #'# Posteriors for mu.phi ............................
-#' attach.jags(res.s2)
-#' mu.phi.0.5 <- mu.phi
-#' df.phi.05 <- data.frame(x = mu.phi.0.5)
+#'attach.jags(res.s2)
+#'mu.phi.0.5 <- mu.phi
+#'df.phi.05 <- data.frame(x = mu.phi.0.5)
 #'
-#' attach.jags(res.s3)
-#' mu.phi.1 <- mu.phi
-#' df.phi.1 <- data.frame(x = mu.phi.1)
+#'attach.jags(res.s3)
+#'mu.phi.1 <- mu.phi
+#'df.phi.1 <- data.frame(x = mu.phi.1)
 #'
 #'
-#' p1 <- ggplot(df.phi.05, aes(x=x))+
+#'p1 <- ggplot(df.phi.05, aes(x=x))+
 #'  xlab(expression(mu[phi])) +
 #'  ylab("Posterior distribution")+
 #'  xlim(c(-7,7))+
@@ -497,7 +326,7 @@
 #'                n = 101,
 #'                args = list(location = 0, scale = 1), size = 1.5) + theme_bw()
 #'
-#' p2 <- ggplot(df.phi.1, aes(x=x))+
+#'p2 <- ggplot(df.phi.1, aes(x=x))+
 #'  xlab(expression(mu[phi])) +
 #'  ylab("Posterior distribution")+
 #'  xlim(c(-7,7))+
@@ -509,13 +338,14 @@
 #'                n = 101,
 #'                args = list(location = 0, scale = 1), size = 1.5) + theme_bw()
 #'
-#' grid.arrange(p1, p2, ncol = 2, nrow = 1)
+#'grid.arrange(p1, p2, ncol = 2, nrow = 1)
 #'
 #'
-#' # Catter plots for regression coefficients ...........................
-#' library(rjags)
+#' # Cater plots for regression coefficients ...........................
+#'
 #' var.names <- names(data.IPD[-1])
 #' v <- paste("beta", names(data.IPD[-1]), sep = ".")
+#' mcmc.x <- as.rjags.mcmc(res.s2$BUGSoutput$sims.matrix)
 #' mcmc.x.2 <- as.mcmc.rjags(res.s2)
 #' mcmc.x.3 <- as.mcmc.rjags(res.s3)
 #'
@@ -526,29 +356,30 @@
 #'          parms = par.names,
 #'          col = "black", lty = 1,
 #'          labels = greek.names,
-#'          greek = TRUE,
+#'          greek = T,
 #'          labels.loc="axis", cex =0.7,
-#'          style = "plain",reorder = FALSE,
-#'          denstrip = FALSE)
+#'          style = "plain",reorder = F, denstrip = F)
 #'
-#' caterplot(mcmc.x.3,
+#'caterplot(mcmc.x.3,
 #'          parms = par.names,
 #'          col = "grey", lty = 2,
 #'          labels = greek.names,
-#'          greek = TRUE,
+#'          greek = T,
 #'          labels.loc="axis", cex =0.7,
-#'          style = "plain", reorder = FALSE,
-#'          denstrip = FALSE,
+#'          style = "plain",reorder = F, denstrip = F,
 #'          add = TRUE,
 #'          collapse=TRUE, cat.shift=-0.5)
 #'
-#' abline(v=0, lty = 2, lwd = 2)
-#' abline(v =2, lty = 2, lwd = 2)
-#' abline(v =2.5, lty = 2, lwd = 2)
+#'
+#'
+#'abline(v=0, lty = 2, lwd = 2)
+#'abline(v =2, lty = 2, lwd = 2)
+#'abline(v =2.5, lty = 2, lwd = 2)
 #'
 #' # End of the examples.
 #'
 #' }
+#'
 #'
 #' @import R2jags
 #' @import rjags
@@ -634,13 +465,15 @@ hmr.default <- function(
 {
 
   # Model errors checking-----
-  check.model.1 = re=="normal" & split.w==TRUE
-  if(check.model.1)stop("Normal random effects and splitting weights are not compatible options")
+
+  if(re=="normal" & split.w==TRUE)stop("Normal random effects and splitting weights are not compatible options")
 
   re.test <- re %in% c("normal", "sm")
+
   if(!re.test)stop("This random effects distribution is not implemented")
 
   link.test <- link %in% c("logit", "cloglog", "probit")
+
   if(!link.test)stop("This link function is not implemented")
 
   # Setting up hyperparameters ...
@@ -671,23 +504,20 @@ hmr.default <- function(
   N <- N + 1
 
   # Data errors
-  # fix  --- failure: length > 1 in coercion to logical ---
+  #if(yc>nc || yt>nt)stop("the data is inconsistent")
+  #if(missing(data))stop("NAs are not allowed in this function")
 
-  check.dat <- any(yc>nc || yt>nt)
-  if(check.dat)stop("the data is inconsistent")
-  #if(any(missing(data)))stop("NAs are not alow in this function")
 
   # Setup IPD data for regression ................................................
   dataIPD$y <- dataIPD[,1]
-  #dataIPD <- dataIPD[,-1]
+  dataIPD <- dataIPD[,-1]       # <- corregido! Se generó un bug version > 1.7.0
 
   model.1 <- model.frame(y ~ ., data = dataIPD)
   X.IPD <- model.matrix(model.1, data = dataIPD)
   X.IPD <- X.IPD[ , dimnames(X.IPD)[[2]] != "(Intercept)", drop=FALSE]
   y.0.IPD <- model.response(model.1)
 
-  check.y.IPD <- is.factor(y.0.IPD)
-  if(check.y.IPD){y.0.IPD <- unclass(y.0.IPD) - 1}
+  if(is.factor(y.0.IPD)){y.0.IPD <- unclass(y.0.IPD) - 1}
 
   K <- dim(X.IPD)[2]
   M <- dim(X.IPD)[1]
@@ -717,13 +547,9 @@ hmr.default <- function(
          pre.Fisher.rho = pre.Fisher.rho
     )
 
-  check.model.2 = re == "sm" & df.estimate == TRUE
-  if(check.model.2){
-  data.model$df.lower <- df.lower
+  if(re == "sm" & df.estimate == TRUE){data.model$df.lower <- df.lower
   data.model$df.upper <- df.upper}
-
-  check.model.3 = re == "sm" & df.estimate == FALSE
-  if(check.model.3){data.model$df <- df}
+  if(re == "sm" & df.estimate == FALSE){data.model$df <- df}
 
   # Parameters to monitor ....................................................................
   parameters.model <-
@@ -734,33 +560,29 @@ hmr.default <- function(
       "sigma.2",
       "rho",
       "Odds.pool",
-      "Odds.new",
+  #    "Odds.new",
       "P_control.pool",
-      "P_control.new",
-      "beta.0",
-      "beta.1",
+  #    "P_control.new",
+      "alpha.0",
+      "alpha.1",
       "beta.IPD",
-      "sigma.beta")
+      "sigma.beta",
+      "x.subgroup",
+      "eta.subgroup" # Verde's formula ....
+     )
 
   # This take the weights for the scale mixture random effects model, etc...
 
-  # Model parameters
-
-  check.q1 = re == "sm" & split.w == TRUE & df.estimate == TRUE
-  check.q2 = re == "sm" & split.w == TRUE & df.estimate == FALSE
-  check.q3 = re=="sm" & split.w == FALSE & df.estimate == TRUE
-  check.q4 = re=="sm" & split.w == FALSE & df.estimate == FALSE
-
-  if(check.q1)
+  if(re == "sm" & split.w == TRUE & df.estimate == TRUE)
     parameters.model <- c(parameters.model, "w1", "w2", "p.w1", "p.w2", "df")
   else
-    if(check.q2)
+    if(re == "sm" & split.w == TRUE & df.estimate == FALSE)
       parameters.model <- c(parameters.model, "w1", "w2", "p.w1", "p.w2")
   else
-    if(check.q3)
+    if(re=="sm" & split.w == FALSE & df.estimate == TRUE)
       parameters.model <- c(parameters.model, "w", "p.w", "df")
   else
-    if(check.q4)
+    if(re=="sm" & split.w == FALSE & df.estimate == FALSE)
       parameters.model <- c(parameters.model, "w", "p.w")
 
 
@@ -770,13 +592,9 @@ hmr.default <- function(
   blueprint <- function(link = "logit", re = "normal", split.w = FALSE, df.estimate = FALSE)
   {
 
-    model.q1 = split.w == FALSE & df.estimate == TRUE
-    model.q2 = split.w == TRUE  & df.estimate == FALSE
-    model.q3 = split.w == TRUE  & df.estimate == TRUE
-
-    if(model.q1) re <- "sm.df"
-    if(model.q2) re <- "sm.split"
-    if(model.q3) re <- "sm.split.df"
+    if(split.w == FALSE & df.estimate == TRUE ) re <- "sm.df"
+    if(split.w == TRUE  & df.estimate == FALSE) re <- "sm.split"
+    if(split.w == TRUE  & df.estimate == TRUE ) re <- "sm.split.df"
 
     #----
     # Block for data model ......................................................................
@@ -856,8 +674,8 @@ hmr.default <- function(
     theta.new[1:2] ~ dmnorm(mu.new[1:2], Omega.new[1:2 ,1:2])
 
     # Functional parameters
-    beta.0 <- (mu.2 - beta.1 * mu.1)
-    beta.1 <- rho * sigma.2/sigma.1
+    alpha.0 <- (mu.2 - alpha.1 * mu.1)
+    alpha.1 <- rho * sigma.2/sigma.1
 
 
     # Block for: link = logistic, re = normal and split.w = FALSE
@@ -938,8 +756,8 @@ hmr.default <- function(
     theta.new[1:2] ~ dmnorm(mu.new[1:2], Omega.new[1:2 ,1:2])
 
     # Functional parameters
-    beta.0 <- (mu.2 - beta.1 * mu.1)
-    beta.1 <- rho * sigma.2/sigma.1
+    alpha.0 <- (mu.2 - alpha.1 * mu.1)
+    alpha.1 <- rho * sigma.2/sigma.1
 
 # Block for: link = logistic, re = sm and split.w = FALSE
 # Model for individual data ..................................................
@@ -1038,8 +856,8 @@ hmr.default <- function(
     theta.new[1:2] ~ dmnorm(mu.new[1:2], Omega.new[1:2 ,1:2])
 
     # Functional parameters
-    beta.0 <- (mu.2 - beta.1 * mu.1)
-    beta.1 <- rho * sigma.2/sigma.1
+    alpha.0 <- (mu.2 - alpha.1 * mu.1)
+    alpha.1 <- rho * sigma.2/sigma.1
 
     # Introduced mu.phi...........................................................
     mu.phi  ~ dlogis(mean.mu.phi, pre.mu.phi) # non-informative
@@ -1092,9 +910,7 @@ hmr.default <- function(
 
     re.sm.split.df <- paste(re.sm.split, prior.of.df)
 
-    #------------------------------------------------------------------------
-
-
+    #...........................................................................
     # Block of parameters of interest depending on the links ......................
     par.logit <- "
 #..............................................................................
@@ -1103,15 +919,21 @@ for(i in 1:M){
     logit(p0.IPD[i]) <- theta.1[N] + inprod(beta.IPD[1:K], X.IPD[i,1:K])
   }
 
-    # Parameters of interest
-    # Pooled summaries ...
-    Odds.pool <- ilogit(beta.0)
-    P_control.pool <- ilogit(mu.1)
+# Verde's formula to estimate relative treatment effect in a subgroup .........
+for(i in 1:K){
+   x.subgroup[i] = mean(mu.phi + beta.IPD[i])
+eta.subgroup[i]  = alpha.0 + alpha.1*(x.subgroup[i] - mu.1)
+}
 
-    # Predictive summaries ...
-    Odds.new <- ilogit(theta.new[2])
-    P_control.new <- ilogit(theta.new[1])
-    }"
+  # Parameters of interest
+  # Pooled summaries ...
+       Odds.pool <- exp(alpha.0)      # Here was a bug in version < 2.0.0
+  P_control.pool <- ilogit(mu.1)
+
+  # Predictive summaries ...
+  #      Odds.new <- exp(theta.new[2]) # Here was a bug in version < 2.0.0
+  # P_control.new <- ilogit(theta.new[1])
+  }"
 
     par.cloglog <- "
 
@@ -1121,14 +943,37 @@ for( i in 1:M){
     cloglog(p0.IPD[i]) <- theta.1[N] + inprod(beta.IPD[1:K], X.IPD[i,1:K])
   }
 
-    # Parameters of interest
-    # Pooled summaries ...
-    Odds.pool <- icloglog(beta.0)
-    P_control.pool <- icloglog(mu.1)
+# Verde's formula to estimate relative treatment effect in a subgroup .........
+for(i in 1:K){
+   x.subgroup[i] = mean(mu.phi + beta.IPD[i])
+eta.subgroup[i]  = alpha.0 + alpha.1*(x.subgroup[i] - mu.1)
+}
 
-    # Predictive summaries ...
-    Odds.new <- icloglog(theta.new[2])
-    P_control.new <- icloglog(theta.new[1])
+  # Parameters of interest
+  # Pooled summaries ...
+  # F(x) = exp(-exp(x)) this is the quantile function of the Gumbel distribution
+  # F(mu.1) = p.0
+  # F(alpha.0 + alpha.1) = p.1
+  # OR = p.1/(1-p.1) / p.0/(1-p.1)
+
+  p.0 = icloglog(mu.1)
+  p.1 = icloglog(mu.1 + alpha.0)
+
+       Odds.pool = p.1/(1-p.1)/(p.0/(1-p.0))
+  P_control.pool = p.1
+
+
+  # Predictive summaries ...
+
+  # p.new.0 = icloglog(theta.new[1])
+  # p.new.1 = icloglog(theta.new[1]+theta.new[2])
+  #
+  #      Odds.new = p.new.1/(1-p.new.1)/(p.new.0/(1-p.new.0))
+  # P_control.new = p.new.0
+
+
+
+
     }"
 
     par.probit <-
@@ -1139,16 +984,36 @@ for( i in 1:M){
     probit(p0.IPD[i]) <- theta.1[N] + inprod(beta.IPD[1:K], X.IPD[i,1:K])
 }
 
-    # Parameters of interest
-    # Pooled summaries ...
-    Odds.pool <- phi(beta.0)
-    P_control.pool <- phi(mu.1)
+# Verde's formula to estimate relative treatment effect in a subgroup .........
+for(i in 1:K){
+   x.subgroup[i] = mean(mu.phi + beta.IPD[i])
+eta.subgroup[i]  = alpha.0 + alpha.1*(x.subgroup[i] - mu.1)
+}
 
-    # Predictive summaries ...
-    Odds.new <- phi(theta.new[2])
-    P_control.new <- phi(theta.new[1])
+  # Parameters of interest
+  # Pooled summaries ...
+  # F(x) = phi(x) this is the quantile function of Standized Normal
+  # F(mu.1) = p.0
+  # F(alpha.0 + alpha.1) = p.1
+  # OR = p.1/(1-p.1) / p.0/(1-p.1)
+
+  p.0 = phi(mu.1)
+  p.1 = phi(mu. 1 + alpha.0)
+
+       Odds.pool = p.1/(1-p.1)/(p.0/(1-p.0))
+  P_control.pool = p.1
+
+  # Predictive summaries ...
+
+  # p.new.0 = phi(theta.new[1])
+  # p.new.1 = phi(theta.new[1]+theta.new[2])
+  #
+  #      Odds.new = p.new.1/(1-p.new.1)/(p.new.0/(1-p.new.0))
+  # P_control.new = p.new.0
+
     }
     "
+#...........................................................................
 
     # List of possible models ...
 
@@ -1247,7 +1112,7 @@ for( i in 1:M){
     cat("The plot functions for output analysis are not implemented in this jarbes version", "\n")
   }
 
-  # Close text conection
+  # Close text conecction
   close(model.bugs.connection)
 
   # Extra outputs that are linked with other functions ...
@@ -1259,7 +1124,7 @@ for( i in 1:M){
   results$re <- re
   results$data <- data
   results$two.by.two <- two.by.two
-  #results$r2jags <- r2jags
+  results$r2jags <- r2jags
   results$split.w <- split.w
   results$df.estimate <- df.estimate
 
@@ -1273,13 +1138,13 @@ for( i in 1:M){
   results$prior$sd.mu.phi       = sd.mu.phi
   results$prior$sigma.1.upper   = sigma.1.upper
   results$prior$sigma.2.upper   = sigma.2.upper
-  results$prior$sigma.beta.upper= sigma.beta.upper
   results$prior$mean.Fisher.rho = mean.Fisher.rho
   results$prior$sd.Fisher.rho   = sd.Fisher.rho
   results$prior$df              = df
   results$prior$df.estimate     = df.estimate
   results$prior$df.lower        = df.lower
   results$prior$df.upper        = df.upper
+
 
 
   class(results) <- c("hmr")
@@ -1375,3 +1240,12 @@ fround <- function (x, digits) {
 pfround <- function (x, digits) {
   print (fround (x, digits), quote=FALSE)
 }
+
+
+
+
+
+
+
+
+

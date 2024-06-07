@@ -1,6 +1,38 @@
 jarbes ChangeLog
 
-Version 2.0.0 -- January-Febrary-March 2022
+Version 2.2.1 -- June 2024 .................................................
+
+  Correction of two bugs:
+
+    1) bcmeta() function, the biased mean is mu[2] <- B =< mu.bias = mu[1]+B
+    2) bcmixmeta() function, the biased means of the DP for the betas[i] is
+       mu.k[k] ~ dnorm(B, inv.var.beta)
+
+Version 2.2.0 -- November 2023 .................................................
+
+  Implementation of the bcmixmeta for the ISCB-2023 paper
+
+  Implementation of the bcdpmeta for the ISCB-2023 paper
+
+Version 2.1.2 -- August 2023 ...................................................
+
+* dpmeta: Bayesian meta-analysis with Dirichlet Process with
+           base distribution G0=N(mu.0, sigma.0^2)
+
+* dpmmeta: Bayesian meta-analysis with Dirichlet Process Mixture with
+           base distribution G0=N(mu.0, sigma.0^2)
+
+* bcdpmeta: Bias Corrected model with Dirichlet Process.
+            I try three different possibilities:
+            1) Using dnormmix in JAGS, which is extremely slow
+            2) Using common w_k and alpha
+            3) Using two different DPs, one for theta and one for beta.
+               This is a convex combination of two DP.
+
+Version 2.1.1 -- February 2023..................................................
+
+* jarbes does not depend of the tidyverse anymore.
+Only tidyr is imported.
 
 Commitments for the next version
 
@@ -12,7 +44,6 @@ Commitments for the next version
   * bcmeta
   * b3lmeta
   * metarisk
-  * hmr
 
 * bforest: a forest plot for bmeta; bcmeta; b3lmeta.
 
@@ -36,6 +67,40 @@ correction approaches (e.g. bmeta vs. bcmeta vs. b3lmeta vs. bmetareg)
 * Function: betaplot for the regression coefficients of bmetareg
 
 * Publication bias modeling.
+
+Version 2.1.0 -- May-June-July-August 2022..................................................
+
+* New data set: hips
+
+* Vignette for hmr() with a real example.
+
+* Important Bug correction in hmr(): From version 1.7.0 (Verde, 2019) to 1.7.4
+  I commented a line in the preparation of the IPD. This action generated a massive
+  differences in the estimation of mu.phi. Now, this bug is solved.
+
+* New function: effect() for the class "hmr"". This function plots the posterior
+                contour for effectivenes in a subgroup identify by the hmr.
+
+* The function plot.hmr() only shows the location of the baseline risk corresponding
+               to AD and IPD.
+
+* Parameters: beta.0 and beta.1 are now
+              alpha.0 and alpha.1. This is for consistency in the notation in the
+              current presentation of the model.
+              This change affect the Figures of the supplementary material of Verde (2019).
+
+* Bug correction: Odds ratio calculation with different link functions in metarisk()
+* Bug correction: Odds ratio calculation with different link functions in hmr()
+
+* Predictive summaries are depreciated in hmr()
+* Predictive summaries are depreciated in metarisk()
+* summary.hmr: predictive summaries omitted.
+* summary.metarisk: predictive summaries omitted.
+
+* The argument to run rjags is depreciated in all functions.
+
+
+Version 2.0.0 -- January-Febrary-March 2022
 
 Done in version 2.0.0 ......................................
 

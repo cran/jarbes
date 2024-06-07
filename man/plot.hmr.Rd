@@ -8,11 +8,12 @@
   x,
   x.lim = c(-5, 2.8),
   y.lim = c(-2, 1),
-  x.lab = "Rate of The Control Group (logit scale)",
-  y.lab = "No improvement <- Treatment effect -> Improvement",
-  title.plot = "Treatment Effect Against Baseline Risk",
-  names = NULL,
-  name.side = NULL,
+  x.lab = "Event rate of The Control Group (logit scale)",
+  y.lab = "No improvement <- Effectiveness -> Improvement",
+  title.plot = "HMR: Effectiveness Against Baseline Risk",
+  AD.colour = "red",
+  IPD.colour = "blue",
+  Study.Types = c("AD-RCTs", "IPD-RWD"),
   ...
 )
 }
@@ -29,9 +30,11 @@
 
 \item{title.plot}{Text for setting a title in the plot.}
 
-\item{names}{Add IPD names to the plot.}
+\item{AD.colour}{Colour of the location of the baseline risk of the aggregated data AD}
 
-\item{name.side}{Set the side of each name in the plot relative to the vertical line.}
+\item{IPD.colour}{Colour of the location of the baseline risk of the individual participant data (IPD) data}
+
+\item{Study.Types}{Vector of text for the label of the study types}
 
 \item{...}{\dots}
 }

@@ -14,8 +14,8 @@
 #' \tabular{ll}{
 #' Package:  \tab jarbes     \cr
 #' Type:     \tab Package    \cr
-#' Version:  \tab 2.0.0      \cr
-#' Date:     \tab 2022-01-17 \cr
+#' Version:  \tab 2.2.1      \cr
+#' Date:     \tab 2024-06-06 \cr
 #' License:  \tab GPL (>= 2) \cr
 #' LazyLoad: \tab yes        \cr }
 #'
@@ -39,6 +39,10 @@
 #'
 #' @references Verde, PE. (2021) A bias-corrected meta-analysis model for combining,
 #'  studies of different types and quality. Biometrical Journal. 2021; 63: 406– 422.
+#'
+#' @references Verde, P.E. and Rosner, G. L. (2024) A Bias-Corrected Bayesian Nonparamteric Model for Combining
+#'             Studies with Varying Quality in Meta-Analysis. Biometrical Journal; (under revision).
+#'
 #'
 #' @keywords Hierarchical Modeling, Bayesian Meta-Analysis, Generalized Evidence Synthesis,
 #' Conflict of Evidence, Outliers Detection, Multiparameters Meta-Analysis.

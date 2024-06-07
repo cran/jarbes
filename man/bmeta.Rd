@@ -15,8 +15,7 @@ bmeta(
   nr.adapt = 1000,
   nr.burnin = 1000,
   nr.thin = 1,
-  be.quiet = FALSE,
-  r2jags = TRUE
+  be.quiet = FALSE
 )
 }
 \arguments{
@@ -46,8 +45,6 @@ deviation between studies. Larger values e.g. 30 corresponds to a Half Normal di
 \item{nr.thin}{Thinning rate, it must be a positive integer, the default value 1.}
 
 \item{be.quiet}{Do not print warning message if the model does not adapt. The default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.}
-
-\item{r2jags}{Which interface is used to link R to JAGS (rjags and R2jags), default value is R2Jags=TRUE.}
 }
 \value{
 This function returns an object of the class "bmeta". This object contains the MCMC
@@ -66,6 +63,9 @@ implemented for this type of object.
 library(jarbes)
 
 #Example: ppvipd
+
+data(ppvipd)
+bm1 = bmeta(ppvipd)
 
 summary(bm1)
 plot(bm1, x.lim = c(-3, 1), y.lim = c(0, 3))

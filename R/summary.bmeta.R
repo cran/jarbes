@@ -54,6 +54,8 @@ summary.bmeta = function(object, digits = 3, ...) {
 
 }
 
+#' @export
+
 print.summary.bmeta = function(x, digits, ...) {
   cat('Model specifications:\n')
   model.spec = x$model.specification
@@ -74,7 +76,9 @@ print.summary.bmeta = function(x, digits, ...) {
 
 
   mcmc = x$mcmc.setup
-  cat(paste('MCMC setup (fit using jags): ', mcmc$n.chains, ' chains, each with ', mcmc$n.iter, ' iterations (first ', mcmc$n.burnin, ' discarded)', sep = ''))
+  cat(paste('MCMC setup (fit using jags): ', mcmc$n.chains, ' chains, each with ', mcmc$n.iter,' iterations', sep = ' '))
+  cat('\n')
+  cat(paste('(first ', mcmc$n.burnin, ' discarded )', sep = ''))
   cat('\n')
   cat(paste('DIC: ', round(x$DIC, digits), sep = ''))
   cat('\n')

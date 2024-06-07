@@ -26,7 +26,6 @@
 #' @param nr.burnin           Number of iteration discard for burn-in period, default is 1000. Some models may need a longer burnin period.
 #' @param nr.thin             Thinning rate, it must be a positive integer, the default value 1.
 #' @param be.quiet            Do not print warning message if the model does not adapt. The default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.
-#' @param r2jags              Which interface is used to link R to JAGS (rjags and R2jags), default value is R2Jags=TRUE.
 #'
 #' @return                    This function returns an object of the class "bmeta". This object contains the MCMC
 #'                            output of each parameter and hyper-parameter in the model and
@@ -45,8 +44,9 @@
 #'
 #' #Example: ppvipd
 #'
-# data(ppvipd)
-# bm1 = bmeta(ppvipd)
+#' data(ppvipd)
+#' bm1 = bmeta(ppvipd)
+#'
 #' summary(bm1)
 #' plot(bm1, x.lim = c(-3, 1), y.lim = c(0, 3))
 #'
@@ -91,8 +91,7 @@ bmeta = function(
   nr.burnin       = 1000,
   nr.thin         = 1,
   # Further options to link jags and R ...............................
-  be.quiet        = FALSE,
-  r2jags          = TRUE
+  be.quiet        = FALSE
           )UseMethod("bmeta")
 
 
@@ -114,8 +113,7 @@ bmeta.default = function(
   nr.thin         = 1,
 
   # Further options to link jags and R ...............................
-  be.quiet        = FALSE,
-  r2jags          = TRUE
+  be.quiet        = FALSE
 )
 {
 
@@ -124,6 +122,8 @@ bmeta.default = function(
   se.y = data$seTE
      N = length(y)
 
+     if(N<3)warning("You have less than 3 studies. This is a low number
+                    of studies for this meta-analysis!")
      # Approximate Bayesian Cross-Validation
      #y.ghost = rep(NA, N)
 
@@ -187,8 +187,7 @@ mu.new ~ dnorm(mu, inv.var)
 
   model.bugs.connection <- textConnection(model.bugs)
 
-  if(r2jags == TRUE){
-    # Use R2jags as interface for JAGS ...
+  # Use R2jags as interface for JAGS ...
     results <- jags(              data = data.bmeta,
                                   parameters.to.save = par.bmeta,
                                   model.file = model.bugs.connection,
@@ -196,25 +195,8 @@ mu.new ~ dnorm(mu, inv.var)
                                   n.iter = nr.iterations,
                                   n.burnin = nr.burnin,
                                   n.thin = nr.thin)
-  }
-  else {
-    # Use rjags as interface for JAGS ...
-    # Send the model to JAGS, check syntax, run ...
-    jm <- jags.model(file     = model.bugs.connection,
-                     data     = data.bmeta,
-                     n.chains = nr.chains,
-                     n.adapt  = nr.adapt,
-                     quiet    = be.quiet)
 
-    results <- coda.samples(jm,
-                            variable.names = par.bmeta,
-                            n.iter         = nr.iterations)
-  }
 
-  if(r2jags == FALSE)
-  {cat("You are using the package rjags as interface to JAGS.", "\n")
-    cat("The plot functions for output analysis are not implemented in this jarbes version", "\n")
-  }
 
   # Close text connection
   close(model.bugs.connection)

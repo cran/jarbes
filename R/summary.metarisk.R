@@ -35,8 +35,8 @@ summary.metarisk = function(object, digits = 3, ...) {
 
 
   # predictive effects
-  summary.m$summary.predictive.effects = bugs.summary[c("Odds.new",
-                                                        "P_control.new"),]
+  # summary.m$summary.predictive.effects = bugs.summary[c("Odds.new",
+  #                                                       "P_control.new"),]
 
   summary.m$DIC = bugs.output$DIC
   summary.m$pD = bugs.output$pD
@@ -53,7 +53,8 @@ summary.metarisk = function(object, digits = 3, ...) {
 }
 
 
-
+#' @export
+#'
 print.summary.metarisk = function(x, digits, ...) {
   cat('Model specification:\n')
   model.spec = x$model.specification
@@ -78,10 +79,10 @@ print.summary.metarisk = function(x, digits, ...) {
 
   cat('\n-------------------\n')
 
-  cat('Predictive effects:\n')
-  print(round(x$summary.predictive.effects, digits))
-
-  cat('\n-------------------\n')
+  # cat('Predictive effects:\n')
+  # print(round(x$summary.predictive.effects, digits))
+  #
+  # cat('\n-------------------\n')
 
   mcmc = x$mcmc.setup
   cat(paste('MCMC setup (fit using jags): ', mcmc$n.chains, ' chains, each with ', mcmc$n.iter, ' iterations (first ', mcmc$n.burnin, ' discarded)', sep = ''))
@@ -91,3 +92,4 @@ print.summary.metarisk = function(x, digits, ...) {
   cat(paste('pD: ', round(x$pD, digits), sep = ''))
   cat('\n')
 }
+

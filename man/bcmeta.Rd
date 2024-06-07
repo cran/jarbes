@@ -82,7 +82,7 @@ This function returns an object of the class "bcmeta". This object contains the 
 \description{
 This function performers a Bayesian meta-analysis to jointly
 combine different types of studies. The random-effects follows a finite
-mixture of normals.
+mixture of normal distributions.
 }
 \details{
 The results of the object of the class bcmeta can be extracted with R2jags or with rjags. In addition a summary, a print and a plot functions are

@@ -2,7 +2,7 @@
 % Please edit documentation in R/metarisk.R
 \name{metarisk}
 \alias{metarisk}
-\title{Bayesian meta-analysis for external validity using baseline risk}
+\title{Bayesian meta-analysis for using baseline risk adjustment}
 \usage{
 metarisk(
   data,

@@ -1,4 +1,4 @@
-#' @title Diagnostic function for bcmeta object in jarbes
+#' @title Diagnostic function for bcmixmeta object in jarbes
 #'
 #' @description This function performers an approximated Bayesian cross-validation for a bcmeta object and specially designed diagnostics to detect the existence of a biased component.
 #'
@@ -10,7 +10,7 @@
 #' @param shape.forest Type of symbol for the center mark in the forest-plot lines
 #'
 #' @param bias.plot Display the bias plot. The default is TRUE.
-#' @param cross.val.plot Display the cross validation plot. The default is TRUE.
+#' @param cross.val.plot Display the cross validation plot. The default is FALSE.
 #'
 #' @param level Vector with the probability levels of the contour plot. The default values are: 0.5, 0.75, and 0.95.
 
@@ -40,94 +40,95 @@
 #'
 #' @export
 
-diagnostic.bcmeta = function(object,
-                      # Parameters for the forest plot ....
-                      post.p.value.cut = 0.05,
-                      study.names = NULL,
-                      size.forest = 0.4,
-                      lwd.forest = 0.2,
-                      shape.forest = 23,
-                      # Parameters for the bias check plot...
-                      bias.plot = TRUE,
-                      cross.val.plot = TRUE,
-                      level = c(0.5, 0.75, 0.95),
-                      x.lim = c(0, 1),
-                      y.lim = c(0, 10),
-                      x.lab = "P(Bias)",
-                      y.lab = "Mean Bias",
-                      title.plot = paste("Bias Diagnostics Contours (50%, 75% and 95%)"),
-                      kde2d.n = 25,
-                      marginals = TRUE,
-                      bin.hist = 30,
-                      color.line = "black",
-                      color.hist = "white",
-                      color.data.points = "black",
-                      alpha.data.points = 0.1,
-                      S = 5000,
-                             ...) {
+diagnostic.bcmixmeta = function(object,
+                               # Parameters for the forest plot ....
+                               post.p.value.cut = 0.05,
+                               study.names = NULL,
+                               size.forest = 0.4,
+                               lwd.forest = 0.2,
+                               shape.forest = 23,
+                               # Parameters for the bias check plot...
+                               bias.plot = TRUE,
+                               cross.val.plot = FALSE,
+                               level = c(0.5, 0.75, 0.95),
+                               x.lim = c(0, 1),
+                               y.lim = c(0, 10),
+                               x.lab = "P(Bias)",
+                               y.lab = "Mean Bias",
+                               title.plot = paste("Bias Diagnostics Contours (50%, 75% and 95%)"),
+                               kde2d.n = 25,
+                               marginals = TRUE,
+                               bin.hist = 30,
+                               color.line = "black",
+                               color.hist = "white",
+                               color.data.points = "black",
+                               alpha.data.points = 0.1,
+                               S = 5000,
+                               ...) {
 
-  x=y=ylo=yhi=kde2d=pi.bias=bias=dens.z=NULL
+  x=y=ylo=yhi=kde2d=pi.bias=bias=dens.z=p.forest=NULL
 
   # Data preparation for the forest-plot .......................................
-  y.ghost = object$BUGSoutput$sims.list$y.ghost
-  g.m = apply(y.ghost, 2, median)
-  g.u = apply(y.ghost, 2, quantile, prob = 0.975)
-  g.l = apply(y.ghost, 2, quantile, prob = 0.025)
+  # y.ghost = object$BUGSoutput$sims.list$y.ghost
+  # g.m = apply(y.ghost, 2, median)
+  # g.u = apply(y.ghost, 2, quantile, prob = 0.95)
+  # g.l = apply(y.ghost, 2, quantile, prob = 0.025)
+  #
+  # n.studies = length(g.m)
+  #
+  # TE = object$data$TE
+  #
+  # if (is.null(study.names)) {
+  #   study.names = 1:n.studies
+  # }
+  #
+  # # Posterior p-values to detect outliers.......................................
+  # p.vec = NULL
+  # for(i in 1:n.studies)
+  # {
+  #   p1 = sum(y.ghost[,i]<TE[i])/length(y.ghost[,i])
+  #   p2 = sum(y.ghost[,i]>TE[i])/length(y.ghost[,i])
+  #   p.val = min(p1, p2)
+  #   p.vec = c(p.vec, p.val)
+  # }
+  #
+  # p.col = ifelse(p.vec < post.p.value.cut, "red", "blue")
+  #
+  # data.plot = data.frame(
+  #   x = study.names,
+  #   TE = TE,
+  #   g.m = g.m,
+  #   ylo  = g.l,
+  #   yhi  = g.u,
+  #   p.vec = p.vec,
+  #   p.col = p.col)
+  #
+  # p.forest = ggplot(data.plot, aes(x = x, y = TE,
+  #                           ymin = ylo, ymax = yhi,
+  #                           size = size.forest     # Point size
+  #             )) +
+  #            geom_pointrange(colour = p.col,
+  #                            lwd = lwd.forest,     # Thickness of the lines
+  #                            shape = shape.forest)+
+  #            coord_flip() +
+  #            xlab("Study") +
+  #            ylab("Posterior Predictive observation") +
+  #            ggtitle("Bayesian Cross-Valdiation") +
+  #            theme_bw()
 
-  n.studies = length(g.m)
-
-  TE = object$data$TE
-
-  if (is.null(study.names)) {
-    study.names = 1:n.studies
-  }
-
-  # Posterior p-values to detect outliers.......................................
-  p.vec = NULL
-  for(i in 1:n.studies)
-  {
-    p1 = sum(y.ghost[,i]<TE[i])/length(y.ghost[,i])
-    p2 = sum(y.ghost[,i]>TE[i])/length(y.ghost[,i])
-    p.val = min(p1, p2)
-    p.vec = c(p.vec, p.val)
-  }
-
-  p.col = ifelse(p.vec < post.p.value.cut, "red", "blue")
-
-  data.plot = data.frame(
-    x = study.names,
-    TE = TE,
-    g.m = g.m,
-    ylo  = g.l,
-    yhi  = g.u,
-    p.vec = p.vec,
-    p.col = p.col)
-
-  p.forest = ggplot(data.plot, aes(x = x, y = TE,
-                            ymin = ylo, ymax = yhi)) +
-             geom_pointrange(colour = p.col,
-                             lwd = lwd.forest,      # Thickness of the lines
-                             shape = shape.forest,
-                             size = size.forest)+   # Point size
-             coord_flip() +
-             xlab("Study") +
-             ylab("Posterior predictive based on the Bias Corrected component") +
-             ggtitle("Bayesian Cross-Valdiation") +
-             theme_bw()
-
-# Bias plot ....................................................................
+  # Bias plot ....................................................................
 
   # Data preparation
   p.bias.1 = object$BUGSoutput$sims.list$p.bias[,2]
-  mu = object$BUGSoutput$sims.list$mu[,1:2]
-  delta.1 =   mu[,2] -mu[,1]
+  mu.0 = object$BUGSoutput$sims.list$mu.0
+  delta.1 =  object$BUGSoutput$sims.list$B
 
-  dat.post = data.frame(x=p.bias.1, y=delta.1)
+  dat.post = data.frame(x = p.bias.1, y = delta.1)
   dat.post = dat.post[sample(1:S), ]
 
-  tau = object$BUGSoutput$sims.list$tau
+  tau = object$BUGSoutput$sims.list$sd.0
 
-  cut.point = 2*mean(tau)
+   cut.point = 2*mean(tau)
 
   # Base plot ..................................................................
   baseplot = ggplot(dat.post, aes(x = x, y = y)) +
@@ -163,16 +164,16 @@ diagnostic.bcmeta = function(object,
                                       lwd =1)
 
   if(marginals==TRUE){
-            p.bias = ggMarginal(finalplot, type= "histogram",
-                                fill = color.hist,
-                                bins = bin.hist)}
+    p.bias = ggMarginal(finalplot, type= "histogram",
+                        fill = color.hist,
+                        bins = bin.hist)}
   else{p.bias = finalplot}
 
-#...............................................................................
+  #...............................................................................
 
   if(cross.val.plot==TRUE & bias.plot == TRUE){return(grid.arrange(p.bias, p.forest, ncol=2))}
-    else if(cross.val.plot==TRUE & bias.plot == FALSE){return(p.forest)}
-        else if(cross.val.plot==FALSE & bias.plot == TRUE){return(p.bias)}
+  else if(cross.val.plot==TRUE & bias.plot == FALSE){return(p.forest)}
+  else if(cross.val.plot==FALSE & bias.plot == TRUE){return(p.bias)}
 
 }
 

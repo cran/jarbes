@@ -66,6 +66,8 @@ summary.bcmeta = function(object, digits = 3, ...) {
  print(summary.m, digits, ...)
 }
 
+#' @export
+#'
 print.summary.bcmeta = function(x, digits, ...) {
   cat('Model specifications:\n')
   model.spec = x$model.specification

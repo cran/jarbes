@@ -28,7 +28,7 @@ diagnostic.b3lmeta = function(object,
   # Data preparation
   y.ghost = object$BUGSoutput$sims.list$y.ghost
   g.m = apply(y.ghost, 2, median)
-  g.u = apply(y.ghost, 2, quantile, prob = 0.95)
+  g.u = apply(y.ghost, 2, quantile, prob = 0.975)
   g.l = apply(y.ghost, 2, quantile, prob = 0.025)
 
   n.studies = length(g.m)
@@ -62,12 +62,11 @@ diagnostic.b3lmeta = function(object,
 
 
   p = ggplot(data.plot, aes(x = x, y = TE,
-                            ymin = ylo, ymax = yhi,
-                            size = size.forest      # Point size
-  )) +
+                            ymin = ylo, ymax = yhi)) +
     geom_pointrange(colour = p.col,
-                    lwd = lwd.forest,             # Thickness of the lines
-                    shape = shape.forest)+
+                    lwd = lwd.forest,        # Thickness of the lines
+                    shape = shape.forest,
+                    size = size.forest)+     # Point size
     coord_flip() +
     xlab("Study") +
     ylab("Posterior Predictive observation") +

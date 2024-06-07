@@ -1,5 +1,4 @@
-#' @title Bayesian meta-analysis for external validity using baseline risk
-#'
+#' @title Bayesian meta-analysis for using baseline risk adjustment
 #'
 #' @description This function performers a Bayesian meta-analysis to analyse heterogeneity of
 #' the treatment effect as a function of the baseline risk. The function fits a
@@ -496,9 +495,9 @@ metarisk.default <- function(
 	# Data errors (fixing failure: length > 1 in coercion to logical)
 	# But it does not work! CRAN still give me the error.
 
-	check.dat <- any(yc>nc || yt>nt)
-	if(check.dat)stop("the data is inconsistent")
-	#if(any(missing(data)))stop("NAs are not alow in this function")
+	# check.dat <- any(yc>nc || yt>nt)
+	# if(check.dat)stop("the data is inconsistent")
+	# if(any(missing(data)))stop("NAs are not allow in this function")
 
 
   # Data, initial values and parameters ..............................
@@ -536,9 +535,9 @@ metarisk.default <- function(
       "sigma.2",
       "rho",
       "Odds.pool",
-      "Odds.new",
+   #   "Odds.new",
       "P_control.pool",
-      "P_control.new",
+   #   "P_control.new",
       "beta.0",
       "beta.1")
 
@@ -802,35 +801,64 @@ re.sm.split.df <- paste(re.sm.split, prior.of.df)
   par.logit <- "
   # Parameters of interest
   # Pooled summaries ...
-       Odds.pool <- ilogit(beta.0)
+       Odds.pool <- exp(beta.0)      # Here was a bug in version < 2.0.0
   P_control.pool <- ilogit(mu.1)
 
   # Predictive summaries ...
-       Odds.new <- ilogit(theta.new[2])
-  P_control.new <- ilogit(theta.new[1])
+  #     Odds.new <- exp(theta.new[2]) # Here was a bug in version < 2.0.0
+  #P_control.new <- ilogit(theta.new[1])
 }"
 
   par.cloglog <- "
   # Parameters of interest
   # Pooled summaries ...
-       Odds.pool <- icloglog(beta.0)
-  P_control.pool <- icloglog(mu.1)
+  # F(x) = exp(-exp(x)) this is the quantile function of the Gumbel distribution
+  # F(mu.1) = p.0
+  # F(beta.0 + beta.1) = p.1
+  # OR = p.1/(1-p.1) / p.0/(1-p.1)
+
+  p.0 = icloglog(mu.1)
+  p.1 = icloglog(mu.1 + beta.0)
+
+       Odds.pool = p.1/(1-p.1)/(p.0/(1-p.0))
+  P_control.pool = p.1
+
 
   # Predictive summaries ...
-       Odds.new <- icloglog(theta.new[2])
-  P_control.new <- icloglog(theta.new[1])
+
+  # p.new.0 = icloglog(theta.new[1])
+  # p.new.1 = icloglog(theta.new[1]+theta.new[2])
+  #
+  #      Odds.new = p.new.1/(1-p.new.1)/(p.new.0/(1-p.new.0))
+  # P_control.new = p.new.0
+
+
 }"
 
   par.probit <-
   "
   # Parameters of interest
   # Pooled summaries ...
-       Odds.pool <- phi(beta.0)
-  P_control.pool <- phi(mu.1)
+  # F(x) = phi(x) this is the quantile function of Standized Normal
+  # F(mu.1) = p.0
+  # F(beta.0 + beta.1) = p.1
+  # OR = p.1/(1-p.1) / p.0/(1-p.1)
+
+  p.0 = phi(mu.1)
+  p.1 = phi(mu. 1 + beta.0)
+
+       Odds.pool = p.1/(1-p.1)/(p.0/(1-p.0))
+  P_control.pool = p.1
+
 
   # Predictive summaries ...
-        Odds.new <- phi(theta.new[2])
-    P_control.new <- phi(theta.new[1])
+
+  # p.new.0 = phi(theta.new[1])
+  # p.new.1 = phi(theta.new[1]+theta.new[2])
+  #
+  #      Odds.new = p.new.1/(1-p.new.1)/(p.new.0/(1-p.new.0))
+  # P_control.new = p.new.0
+
   }
   "
 
@@ -934,7 +962,7 @@ if(r2jags == FALSE)
    cat("The plot functions for output analysis are not implemented in this jarbes version", "\n")
 }
 
-# Close text conection
+# Close text connection
 close(model.bugs.connection)
 
 # Extra outputs that are linked with other functions

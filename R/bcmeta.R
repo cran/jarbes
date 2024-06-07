@@ -2,7 +2,7 @@
 #'
 #' @description This function performers a Bayesian meta-analysis to jointly
 #' combine different types of studies. The random-effects follows a finite
-#' mixture of normals.
+#' mixture of normal distributions.
 #'
 #'
 #'
@@ -161,7 +161,6 @@ bcmeta.default = function(
   df.scale.between    = 1,
   B.lower     = 0,
   B.upper     = 10,
-
   a.0         = 1,
   a.1         = 1,
   nu          = 0.5,
@@ -187,6 +186,8 @@ bcmeta.default = function(
      y = sort(data$TE)
   se.y = data$seTE[order(data$TE)]
      N = length(y)
+
+     if(N<5)stop("Low number of studies in the meta-analysis!")
 
      # Note: prepare a regression equation ...
      #x = data$design[order(data$TE)]
@@ -304,7 +305,8 @@ inv.var[2] <- inv.var[1]
 inv.var.mu <- pow(sd.mu, -2)
       mu[1] ~ dnorm(mean.mu, inv.var.mu)
           B ~ dunif(B.lower, B.upper)
-     mu[2] <- mu[1] + B
+    # mu[2] <- mu[1] + B
+    mu[2] <- B
   }
   "
 

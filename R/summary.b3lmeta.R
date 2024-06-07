@@ -67,6 +67,9 @@ summary.b3lmeta = function(object, digits = 3, ...) {
 
 }
 
+#' @export
+#'
+
 print.summary.b3lmeta = function(x, digits, ...) {
   cat('Model specifications:\n')
   model.spec = x$model.specification
