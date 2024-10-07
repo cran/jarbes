@@ -6,6 +6,7 @@
 \usage{
 bcmixmeta(
   data,
+  x = NULL,
   mean.mu.0 = 0,
   sd.mu.0 = 10,
   scale.sigma.between = 0.5,
@@ -19,7 +20,7 @@ bcmixmeta(
   alpha.0 = 0.03,
   alpha.1 = 2,
   K = 10,
-  sort.priors = FALSE,
+  bilateral.bias = FALSE,
   nr.chains = 2,
   nr.iterations = 10000,
   nr.adapt = 1000,
@@ -32,6 +33,8 @@ bcmixmeta(
 \item{data}{A data frame with at least two columns with the following names:
 1) TE = treatment effect,
 2) seTE = the standard error of the treatment effect.}
+
+\item{x}{a covariate to perform meta-regression.}
 
 \item{mean.mu.0}{Prior mean of the mean of the base distribution default value is mean.mu.0 = 0.}
 
@@ -67,11 +70,12 @@ the default value depends on the sample size, see the example below. We give as
 working value alpha.1 = 2}
 
 \item{K}{Maximum number of clusters in the DP, the default value depends on alpha.1, see the
-example below. We give as working vaule K = 10.}
+example below. We give as working value K = 10.}
 
-\item{sort.priors}{Experimental option, indicates if a weak information regarding the means and the variances are used.
-If sort.priors == TRUE then the Delta parameter is not used
-and only the order of the means and variances are restricted.}
+\item{bilateral.bias}{Experimental option, which indicates if bias could be to the left and
+to the right of the model of interest. If bilateral.bias==TRUE,
+then the function generates three mean and sorts the means in two
+groups: mean_bias_left, mean_theta, mean_bias_right.}
 
 \item{nr.chains}{Number of chains for the MCMC computations, default 2.}
 

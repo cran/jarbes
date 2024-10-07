@@ -183,8 +183,14 @@ bcmeta.default = function(
 {
 
   # Mixture of Normals Random effects meta-analysis
-     y = sort(data$TE)
-  se.y = data$seTE[order(data$TE)]
+  #    y = sort(data$TE, na.last = TRUE)
+  # se.y = data$seTE[order(data$TE, na.last = TRUE)]
+  #    N = length(y)
+
+     # Avoid order of the effects
+     y = data$TE
+     se.y = data$seTE
+
      N = length(y)
 
      if(N<5)stop("Low number of studies in the meta-analysis!")
@@ -196,9 +202,10 @@ bcmeta.default = function(
 
      #T is the index that allocates each study to one of the two components
      T = rep(NA, N)
-     T[1] = 1
-     T[N] = 2
-
+     min.index = which(y == min(y, na.rm = TRUE))
+     max.index = which(y == max(y, na.rm = TRUE))
+     T[min.index] = 1
+     T[max.index] = 2
 
      # This list describes the data used by the BUGS script.
      data.bcmeta <- list ("y", "se.y", "N", "T",
@@ -247,7 +254,11 @@ bcmeta.default = function(
 
   # Mixture heterocedastic random effects ..........................
 
-      theta.bc[i] <- theta[i]*(1-I[i]) + theta.bias[i]*I[i]
+      #theta.bc[i] <- theta[i]*(1-I[i]) + theta.bias[i]*I[i]
+
+      theta.bc[i] <- theta[i]+ (theta.bias[i]*I[i])
+
+
              I[i] <- T[i] - 1
           theta[i] ~ dnorm(mu[1], prec.tau[i])
      theta.bias[i] ~ dnorm(mu[2], prec.tau[i])

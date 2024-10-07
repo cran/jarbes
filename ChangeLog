@@ -1,5 +1,16 @@
 jarbes ChangeLog
 
+Version 2.2.2 -- September-October 2024 ............................................
+
+Improvements of the bcmixmeta() function to collect information about co-clustering
+for studies in the bias cluster.
+
+Experimental:
+- bcmixmeta() function with two directions of bias
+- bcmixmeta() function with one covariate in meta-regression
+- dpmetareg() function to perform Dependent Dirichlet Process meta-regression.
+
+
 Version 2.2.1 -- June 2024 .................................................
 
   Correction of two bugs:
@@ -8,7 +19,7 @@ Version 2.2.1 -- June 2024 .................................................
     2) bcmixmeta() function, the biased means of the DP for the betas[i] is
        mu.k[k] ~ dnorm(B, inv.var.beta)
 
-Version 2.2.0 -- November 2023 .................................................
+Version 2.2.0 -- November 2023 .............................................
 
   Implementation of the bcmixmeta for the ISCB-2023 paper
 

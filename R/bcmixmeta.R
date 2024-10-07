@@ -8,6 +8,8 @@
 #'                             1) TE = treatment effect,
 #'                             2) seTE = the standard error of the treatment effect.
 #'
+#' @param x                   a covariate to perform meta-regression.
+#'
 #' @param mean.mu.0            Prior mean of the mean of the base distribution default value is mean.mu.0 = 0.
 #'
 #' @param sd.mu.0              Prior standard deviation of the base distribution, the default value is 10^-6.
@@ -39,12 +41,14 @@
 #'                            working value alpha.1 = 2
 #'
 #' @param K                   Maximum number of clusters in the DP, the default value depends on alpha.1, see the
-#'                            example below. We give as working vaule K = 10.
+#'                            example below. We give as working value K = 10.
 #'
 #'
-#' @param sort.priors         Experimental option, indicates if a weak information regarding the means and the variances are used.
-#'                            If sort.priors == TRUE then the Delta parameter is not used
-#'                            and only the order of the means and variances are restricted.
+#' @param bilateral.bias      Experimental option, which indicates if bias could be to the left and
+#'                            to the right of the model of interest. If bilateral.bias==TRUE,
+#'                            then the function generates three mean and sorts the means in two
+#'                            groups: mean_bias_left, mean_theta, mean_bias_right.
+#'
 #'
 #'
 #' @param nr.chains           Number of chains for the MCMC computations, default 2.
@@ -171,6 +175,7 @@
 #' @export
 bcmixmeta = function(
     data,
+    x = NULL,
     # Hyperpriors parameters............................................
     # Hyperpriors parameters............................................
     mean.mu.0     = 0,
@@ -186,7 +191,7 @@ bcmixmeta = function(
     alpha.0             = 0.03,
     alpha.1             = 2,
     K                   = 10,
-    sort.priors         = FALSE,
+    bilateral.bias      = FALSE,
     # MCMC setup..........................................................
     nr.chains       = 2,
     nr.iterations   = 10000,
@@ -201,6 +206,7 @@ bcmixmeta = function(
 #' @export
 bcmixmeta.default = function(
     data,
+    x = NULL,
     # Hyperpriors parameters............................................
     mean.mu.0           = 0,
     sd.mu.0             = 10,
@@ -215,7 +221,7 @@ bcmixmeta.default = function(
     alpha.0             = 0.03,
     alpha.1             = 2,
     K                   = 10,
-    sort.priors         = FALSE,
+    bilateral.bias      = FALSE,
     # MCMC setup........................................................
     nr.chains       = 2,
     nr.iterations   = 10000,
@@ -235,7 +241,7 @@ bcmixmeta.default = function(
   # Avoid order of the effects
   y = data$TE
   se.y = data$seTE
-
+  x = x            # a single covariate for meta-regression
   N = length(y)
 
   if(N<5)stop("Low number of studies in the meta-analysis!")
@@ -246,11 +252,21 @@ bcmixmeta.default = function(
   #T[1] = 1
   #T[N] = 2
 
-  # Index of the max and min to inform T[], but this does not work for bilateral bias
-  min.index = which(y == min(y))
-  max.index = which(y == max(y))
-  T[min.index] = 1
-  T[max.index] = 2
+  # Index of the max and min to inform T[], for bilateral bias it is adapted.
+
+  if(bilateral.bias==TRUE){
+    min.index = which(y == min(y, na.rm = TRUE))
+    max.index = which(y == max(y, na.rm = TRUE))
+    T[min.index] = 1
+    T[max.index] = 3
+  }
+  else
+  {
+    min.index = which(y == min(y, na.rm = TRUE))
+    max.index = which(y == max(y, na.rm = TRUE))
+    T[min.index] = 1
+    T[max.index] = 2
+  }
 
   # This list describes the data used by the BUGS script.
   data.bcmixmeta.delta = list ("y", "se.y", "N", "T",
@@ -268,33 +284,51 @@ bcmixmeta.default = function(
                                "alpha.1",
                                "K")
 
+  data.bcmixmeta.x = list ("y", "se.y", "x",
+                           "N", "T",
+                           "mean.mu.0",
+                           "sd.mu.0",
+                           "scale.sigma.between",
+                           "df.scale.between",
+                           "scale.sigma.beta",
+                           "df.scale.beta",
+                           "B.lower",
+                           "B.upper",
+                           "a.0",
+                           "a.1",
+                           "alpha.0",
+                           "alpha.1",
+                           "K")
+
+
   # This list describes the data used by the BUGS script.
-  data.bcmixmeta.sort = list ("y", "se.y", "N", "T",
+  data.bcmixmeta.bilateral.bias = list ("y", "se.y", "N", "T",
                               "mean.mu.0",
                               "sd.mu.0",
                               "scale.sigma.between",
                               "df.scale.between",
+                              "B.lower",
+                              "B.upper",
                               "a.0",
                               "a.1",
                               "alpha.0",
                               "alpha.1",
-                              "K",
-                              "B.upper")
+                              "K")
 
 
-  if(sort.priors == TRUE)
-  {data.bcmixmeta = data.bcmixmeta.sort}
+  if(bilateral.bias == TRUE)
+  {data.bcmixmeta = data.bcmixmeta.bilateral.bias}
   else
   {data.bcmixmeta = data.bcmixmeta.delta}
 
-
+  if(!is.null(x)) data.bcmixmeta = data.bcmixmeta.x
 
   # List of parameters
   par.bcmixmeta  <- c("mu.k",
                       "mu.0",
                       "mu.new",
                       "sd.0",
-                      "p",
+                      "p.cluster",
                       "alpha",
                       "p.bias",
                       "B",
@@ -303,129 +337,69 @@ bcmixmeta.default = function(
                       "theta.bias",
                       "theta",
                       "beta",
-                       "I")
+                       "I",
+                      "group",
+                      "gind",
+                      "equalsmatrix.bias.1",
+                      "equalsmatrix.bias.2",
+                      "new.group")
+  # List of parameters
+  par.bcmixmeta.x  <- c("mu.k",
+                      "mu.0",
+                      "mu.new",
+                      "sd.0",
+                      "p.cluster",
+                      "alpha",
+                      "p.bias",
+                      "B",
+                      "sd.beta",
+                      "K.hat",
+                      "theta.bias",
+                      "theta",
+                      "beta",
+                      "I",
+                      "group",
+                      "gind",
+                      "equalsmatrix",
+                      "beta.x",
+                      "mu.x",
+                      "mu.x.pred",
+                      "alpha.0.bias",
+                      "alpha.1.bias")
 
-  # Model in BUGS without Delta, but using sort() function in JAGS ...
-  model.bugs.bcmixmeta.sort =
-    "
-  model
-  {
-   for( i in 1 : N ) {
-  # Likelihood of theta.B[i] ...................................................
-            y[i] ~ dnorm(theta.bias[i], pre.y[i])
-        pre.y[i] <- pow(se.y[i], -2)
+  # List of parameters
+  par.bcmixmeta.bilateral  <- c(
+                      "beta.k",
+                      "mu.0",
+                      "mu.beta.left",
+                      "mu.beta.right",
+                      "mu.new",
+                      "sd.0",
+                      "sd.beta.left",
+                      "sd.beta.right",
+                      "p.cluster",
+                      "alpha",
+                      "p.bias",
+                      "B.left",
+                      "B.right",
+                      "K.hat",
+                      "theta.bias",
+                      "theta",
+                      "beta",
+                      "I",
+                      "gind")
 
-  # Mixture Process: Normal and Dirichlet process ..............................
+  if(bilateral.bias == TRUE)
+  {par.bcmixmeta = par.bcmixmeta.bilateral }
+  else
+  {par.bcmixmeta = par.bcmixmeta}
 
-# Aca tengo que probar..........................................................................
-#theta.bc[i] ~ dnorm(mu[i], inv.var.0)
-#mu[i] <- mu.bias[T[i], group[i]]
-#T[i] ~  dcat(p.bias[1:2])
-# ......
-
-#mu.bias[1] <- mu.0
-#mu.bias[2,1:K] <- DP ... algo asi...
-#..............................................................................................
-
-# theta.b[i] <- theta[i]*(1-I[i]) + beta[i]*I[i]
-# theta.bc[i] <- theta[i]*(1-I[i]) + (beta[i]+theta[i])*I[i]
-
- theta.bias[i] <- theta[i]+ (beta[i]*I[i])
-
-              I[i] <- T[i] - 1
-              T[i] ~  dcat(p.bias[1:2])
-          theta[i] ~  dnorm(mu.0, inv.var.0)
-
-  # Dirichlet Process for biased component ............................
-           beta[i] <- mu.k[group[i]]
-           group[i] ~ dcat(pi[])
-
-  for(j in 1:K)
-  {
-      gind[i, j] <- equals(j, group[i])
-      }
-   }
-
-
-  # Counting the number of clusters ...
-  K.hat <- sum(cl[])
-  for(j in 1:K)
-  {
-  sumind[j] <- sum(gind[,j])
-      cl[j] <- step(sumind[j] -1+0.01) # cluster j used in this iteration.
-  }
-
-  # Prior for the probability of bias
-     p.bias[2] ~ dbeta(a.0, a.1)
-     p.bias[1] <- 1 - p.bias[2]
-
-
-  # Prior for the means and variances to be ordered .....
-  # Important: JAGS starts the MCMC of mu.s for mu.s[1] = m.s[2], which makes
-  # no sence, because mu.0 < mu.beta for the biased case.
-  #
-  # In addition, the MCMC mixing takes longer if we start at mu.s[1] = m.s[2]
-  #
-  # Therefore, mu.s[2] has a prior N(mean.mu.0 + B/2, ...)
-
-  inv.var.mu.0 <- pow(sd.mu.0, -2)
-
-
-        mu.s[1] ~ dnorm(mean.mu.0, inv.var.mu.0)
-   inv.var.s[1] ~ dscaled.gamma(scale.sigma.between, df.scale.between)
-
-#mean.mu.bias <- mean.mu.0 + B/2
-        mu.s[2] ~ dnorm(mean.mu.0 + B.upper/2, inv.var.mu.0)
-   inv.var.s[2] ~ dscaled.gamma(scale.sigma.between, df.scale.between)
-
-  # Sort means ....
-  mu.sorted <- sort(mu.s)
-       mu.0 <- mu.sorted[1]
-    mu.beta <- mu.sorted[2]
-
-  # Mean bias
-   B <- mu.beta - mu.0
-
-  # Sort variances ...
-  inv.var.sorted <- sort(inv.var.s)
-       inv.var.0 <- inv.var.sorted[2]
-    inv.var.beta <- inv.var.sorted[1]
-            sd.0 <- pow(inv.var.0, -0.5)
-         sd.beta <- pow(inv.var.beta, -0.5)
-
-# Posterior predictive
-mu.new ~ dnorm(mu.0,  inv.var.0)
-
-
-  # Priors for the clusters' parameters biased component .......................
-
-  for(k in 1:K){
-       mu.k[k] ~ dnorm(mu.beta, inv.var.beta)
-       }
-
-
- # Prior for alpha .............................................................
-  alpha ~ dunif(alpha.0, alpha.1)
-
- # Stick-Breaking process and sampling from G0..................................
-
-             q[1] ~ dbeta(1, alpha)
-             p[1] <- q[1]
-            pi[1] <- p[1]
-
-    for (j in 2:K) {
-             q[j] ~ dbeta(1, alpha)
-             p[j] <- q[j]*(1 - q[j-1])*p[j-1]/q[j-1]
-            pi[j] <- p[j]
-           }
-
-  }
-  "
+  if(!is.null(x)) par.bcmixmeta = par.bcmixmeta.x
 
 
 
 
-  # Model in BUGS with Delta ....
+  # Model in BUGS with mu_beta ....
   model.bugs.bcmixmeta.delta =
     "
   model
@@ -437,8 +411,6 @@ mu.new ~ dnorm(mu.0,  inv.var.0)
 
   # Mixture Process: Normal and Dirichlet process ..............................
 
- #theta.bias[i] <- theta[i]*(1-I[i]) + beta[i]*I[i]
-
   theta.bias[i] <- theta[i] + (beta[i]*I[i])
 
               I[i] <- T[i] - 1
@@ -447,14 +419,23 @@ mu.new ~ dnorm(mu.0,  inv.var.0)
 
   # Dirichlet Process for biased component ............................
            beta[i] <- mu.k[group[i]]
-           group[i] ~ dcat(pi[])
-
+           group[i] ~ dcat(p.cluster[])
 
   for(j in 1:K)
-  {
-      gind[i, j] <- equals(j, group[i])
-      }
+  {gind[i, j] <- equals(j, group[i])}   #Frequency of study i belong to cluster j
+
    }
+
+  # Number of studies in the same bias cluster
+  for(i in 1:N)
+  {new.group[i] <- (1-I[i]) + I[i]*(group[i]+1)}
+
+  for(i in 1:N){
+    for(j in 1:N){
+    equalsmatrix.bias.1[i,j] <- equals(I[i], I[j])
+    equalsmatrix.bias.2[i,j] <- equals(new.group[i], new.group[j])
+    }
+  }
 
   # Counting the number of clusters ...
   K.hat <- sum(cl[])
@@ -481,13 +462,117 @@ mu.new ~ dnorm(mu.0,  inv.var.0)
 # Posterior predictive
 mu.new ~ dnorm(mu.0,  inv.var.0)
 
-
   # Priors for the clusters' parameters biased component .......................
 
          B ~ dunif(B.lower, B.upper) # Bias parameter
   mu.bias <- mu.0 + B                # Here mu.bias = mu.0 + Bias
+
+  #q.beta <- 0.01  # quality constant to increase the variability when I=1
+
   for(k in 1:K){
-      # mu.k[k] ~ dnorm(mu.0 + B, inv.var.0 + inv.var.beta) #
+        mu.k[k] ~ dnorm(B, inv.var.beta) # DP on the betas_i
+    #   mu.k[k] ~ dnorm(B, inv.var.0*q.beta)
+        }
+
+  inv.var.beta ~ dscaled.gamma(scale.sigma.beta, df.scale.beta)
+  sd.beta = pow(inv.var.beta, -0.5)
+
+
+ # Prior for alpha .............................................................
+  alpha ~ dunif(alpha.0, alpha.1)
+
+  #alpha <- alpha.1
+
+ # Stick-Breaking process and sampling from G0..................................
+
+             q[1] ~ dbeta(1, alpha)
+             p[1] <- q[1]
+     p.cluster[1] <- p[1]
+
+           for (j in 2:(K-1)) {
+             q[j] ~ dbeta(1, alpha)
+             p[j] <- q[j]*(1 - q[j-1])*p[j-1]/q[j-1]
+     p.cluster[j] <- p[j]/sum(p[])                    # Make sure that pi[] adds to 1
+           }
+
+
+  }
+  "
+
+# Model in BUGS with mu_beta ....
+  model.bugs.bcmixmeta.x =
+    "
+  model
+  {
+   for( i in 1 : N ) {
+  # Likelihood of theta.B[i] ...................................................
+            y[i] ~ dnorm(theta.bias[i], pre.y[i])
+        pre.y[i] <- pow(se.y[i], -2)
+
+  # Mixture Process: Normal and Dirichlet process ..............................
+
+  theta.bias[i] <- theta[i] + (beta[i]*I[i])
+
+              I[i] <- T[i] - 1
+              T[i] ~  dcat(p.bias[i,1:2])
+
+              logit(p.bias[i,2]) = alpha.0.bias + alpha.1.bias*x[i]
+              p.bias[i,1] = 1-p.bias[i,2]
+
+              theta[i] ~  dnorm(mu.0, inv.var.0)
+
+       #   theta[i] ~  dnorm(mu.x[i], inv.var.0)
+       #   mu.x[i] <- mu.0 + beta.x*x[i]
+       #  mu.x.pred[i] ~  dnorm(mu.x[i], inv.var.0)
+
+  # Dirichlet Process for biased component ............................
+           beta[i] <- mu.k[group[i]]
+           group[i] ~ dcat(p.cluster[])
+
+ for(j in 1:K) {gind[i, j] <- equals(j, group[i])}   #Frequency of study i belong to cluster j
+   }
+
+  # Number of studies in the same bias cluster
+  for(i in 1:N){
+    for(j in 1:N){
+    equalsmatrix[i,j] <- equals(group[i], group[j])
+    }
+  }
+
+
+  # Counting the number of clusters ...
+  K.hat <- sum(cl[])
+  for(j in 1:K)
+  {
+  sumind[j] <- sum(gind[,j])
+      cl[j] <- step(sumind[j] -1+0.01) # cluster j used in this iteration.
+  }
+
+  # Prior for the probability of bias
+   #  p.bias[2] ~ dbeta(a.0, a.1)
+   #  p.bias[1] <- 1 - p.bias[2]
+   alpha.0.bias ~ dnorm(0, 0.01)
+   alpha.1.bias ~ dnorm(0, 0.01)
+
+  # Priors for model of interest ..............................................
+
+          mu.0 ~ dnorm(mean.mu.0, inv.var.mu.0)
+          inv.var.mu.0 <- pow(sd.mu.0, -2)
+
+          beta.x ~ dnorm(mean.mu.0, inv.var.mu.0)
+
+     inv.var.0 ~ dscaled.gamma(scale.sigma.between, df.scale.between)
+
+         sd.0 <- pow(inv.var.0, -0.5)
+
+# Posterior predictive
+mu.new ~ dnorm(mu.0,  inv.var.0)
+
+# Priors for the clusters' parameters biased component .......................
+
+         B ~ dunif(B.lower, B.upper) # Bias parameter
+  mu.bias <- mu.0 + B                # Here mu.bias = mu.0 + Bias
+  for(k in 1:K){
         mu.k[k] ~ dnorm(B, inv.var.beta) #                    DP on the betas_i
         }
 
@@ -498,26 +583,159 @@ mu.new ~ dnorm(mu.0,  inv.var.0)
  # Prior for alpha .............................................................
   alpha ~ dunif(alpha.0, alpha.1)
 
+  #alpha <- alpha.1
+
  # Stick-Breaking process and sampling from G0..................................
 
              q[1] ~ dbeta(1, alpha)
              p[1] <- q[1]
-            pi[1] <- p[1]
+            p.cluster[1] <- p[1]
 
            for (j in 2:K) {
              q[j] ~ dbeta(1, alpha)
              p[j] <- q[j]*(1 - q[j-1])*p[j-1]/q[j-1]
-            pi[j] <- p[j]
+           p.cluster[j] <- p[j]/sum(p[])              # Make sure that pi[] adds to 1
            }
 
   }
   "
 
-  if(sort.priors == TRUE)
-  {model.bugs.connection = textConnection(model.bugs.bcmixmeta.sort)}
+
+
+
+
+  # Model in BUGS using bilateral bias ...
+  model.bugs.bcmixmeta.bilateral.bias =
+    "
+  model
+  {
+   for( i in 1 : N ) {
+  # Likelihood of theta.bias[i] ................................................
+            y[i] ~ dnorm(theta.bias[i], pre.y[i])
+        pre.y[i] <- pow(se.y[i], -2)
+
+# Three groups mixtures: Normal and left/right Dirichlet process................
+
+     theta.bias[i] <- theta[i]+ (beta[i]*I[i])
+              I[i] <- T[i] - 2                 # I is -1, 0, 1
+              T[i] ~  dcat(p.bias[1:3])
+          theta[i] ~  dnorm(mu.0, inv.var.0)
+
+  # Dirichlet Process for biased component .....................................
+           beta[i] <- beta.k[T[i], group[i]] #
+          group[i] ~  dcat(pi[T[i], ])       # group[i] is the index of the cluster within the process
+                                             # pi[1, i] is the probability of the cluster i left
+                                             # pi[2, i] = 0
+                                             # pi[3, i] is the probability of the cluster i right
+
+  for(j in 1:K)
+  {
+      gind[i, j] <- equals(j, group[i])
+      }
+   }
+
+
+  # Stick-Breaking process on the left, i.e.  T= 1...............
+              q.I.1[1] ~ dbeta(1, alpha)
+             p.I.1[1] <- q.I.1[1]
+             pi[1, 1] <- p.I.1[1]
+
+    for (j in 2:K) {
+             q.I.1[j] ~ dbeta(1, alpha)
+             p.I.1[j] <- q.I.1[j]*(1 - q.I.1[j-1])*p.I.1[j-1]/q.I.1[j-1]
+             pi[1, j] <- p.I.1[j]
+    }
+
+  # Stick-Breaking process on the right, i.e. T = 3...............
+             q.I.3[1] ~ dbeta(1, alpha)
+             p.I.3[1] <- q.I.3[1]
+             pi[3, 1] <- p.I.3[1]
+
+    for (j in 2:K) {
+             q.I.3[j] ~ dbeta(1, alpha)
+             p.I.3[j] <- q.I.3[j]*(1 - q.I.3[j-1])*p.I.3[j-1]/q.I.3[j-1]
+             pi[3, j] <- p.I.3[j]
+           }
+
+  # For the model of interest, i.e. T = 2, pi[2, i] = 0
+    for(i in 1:K)
+      {
+        pi[2, i] <- 0.01
+      }
+
+  # Counting the number of clusters ...
+  K.hat <- sum(cl[])
+  for(j in 1:K)
+  {
+  sumind[j] <- sum(gind[,j])
+      cl[j] <- step(sumind[j]-1+0.01) # cluster j used in this iteration.
+  }
+
+  # Prior for the probability of bias
+     p.bias[1] ~ dbeta(a.0, a.1)                  # Left bias
+     p.bias[2] <- 1 - (p.bias[1]+p.bias[3])
+     p.bias[3] ~ dbeta(a.0, a.1)                  # Right bias
+
+  # Important: JAGS starts the MCMC of mu.s for mu.s[1] = m.s[2] = m.s[3], which makes
+  # no sence for the biased case.
+  #
+  # In addition, the MCMC mixing takes longer if we start at mu.s[1] = m.s[2] = m.s[3]
+  #
+  # Therefore, mu.s[1] has a prior N(mean.mu.0 + B.lower, ...)
+  #            mu.s[3] has a prior N(mean.mu.0 + B.upper, ...)
+
+  inv.var.mu.0 <- pow(sd.mu.0, -2)
+
+# mean.mu.bias <- mean.mu.0 + B.lower
+        mu.s[1] ~ dnorm(mean.mu.0 + B.lower, inv.var.mu.0)
+   inv.var.beta.left ~ dscaled.gamma(scale.sigma.between, df.scale.between)
+
+        mu.s[2] ~ dnorm(mean.mu.0, inv.var.mu.0)
+      inv.var.0 ~ dscaled.gamma(scale.sigma.between, df.scale.between)
+
+# mean.mu.bias <- mean.mu.0 + B.upper
+        mu.s[3] ~ dnorm(mean.mu.0 + B.upper, inv.var.mu.0)
+   inv.var.beta.right ~ dscaled.gamma(scale.sigma.between, df.scale.between)
+
+  # Sort means ....
+  mu.sorted <- mu.s   #sort(mu.s)
+     mu.beta.left <- mu.sorted[1]
+             mu.0 <- mu.sorted[2]
+    mu.beta.right <- mu.sorted[3]
+
+  # sigmas ....
+      sd.0 <- pow(inv.var.0, -0.5)
+   sd.left <- pow(inv.var.beta.left, -0.5)
+  sd.right <- pow(inv.var.beta.right, -0.5)
+
+  # Mean bias ...
+    B.left <- mu.beta.left - mu.0
+   B.right <- mu.beta.right - mu.0
+
+# Priors for the clusters' parameters biased component .......................
+  for(k in 1:K){
+      beta.k[1, k] ~ dnorm(mu.beta.left, inv.var.beta.left)
+      beta.k[2, k] <- 0
+      beta.k[3, k] ~ dnorm(mu.beta.right, inv.var.beta.right)
+       }
+
+# Prior for alpha .............................................................
+  alpha ~ dunif(alpha.0, alpha.1)
+
+# Posterior predictive
+  mu.new ~ dnorm(mu.0,  inv.var.0)
+
+  }
+  "
+
+
+  if(bilateral.bias == TRUE)
+  {model.bugs.connection = textConnection(model.bugs.bcmixmeta.bilateral.bias)}
   else
   {model.bugs.connection = textConnection(model.bugs.bcmixmeta.delta)}
 
+
+  if(!is.null(x)) {model.bugs.connection = textConnection(model.bugs.bcmixmeta.x)}
 
 
   # Use R2jags as interface for JAGS ...
