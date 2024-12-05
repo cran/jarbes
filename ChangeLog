@@ -1,6 +1,25 @@
 jarbes ChangeLog
 
-Version 2.2.2 -- September-October 2024 ............................................
+Version 2.2.3 -- November-December 2024 ........................................
+
+- Correction of the summary functions where R2jags affected the pD values:
+    * bmeta and summary.bmeta
+    * bcmeta and summary.bcmeta
+    * bcmixmeta ... the summary.bcmixmeta needs to be improved
+    * bcdpmeta ... the summary.bcdpmeta needs to be improved
+    * b3lmeta  and summary.b3lmeta
+    * dpmeta ... the summary.dpmeta needs to be improved
+    * dpmetareg ... the summary.dpmetareg needs to be improved
+    * dpmmeta ... the summary.dpmetareg needs to be improved
+    * hmr and summary.hmr
+    * metarisk and summary.metarisk
+
+- The interface "rjags" is not supported. Only R2jags is supported.
+
+- We add the risk of bias assessment for the "stemcells" dataframe.
+
+
+Version 2.2.2 -- September-October 2024 ........................................
 
 Improvements of the bcmixmeta() function to collect information about co-clustering
 for studies in the bias cluster.

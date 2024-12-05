@@ -30,9 +30,7 @@ hmr(
   nr.iterations = 10000,
   nr.adapt = 1000,
   nr.burnin = 1000,
-  nr.thin = 1,
-  be.quiet = FALSE,
-  r2jags = TRUE
+  nr.thin = 1
 )
 }
 \arguments{
@@ -105,17 +103,13 @@ The default value is FALSE.}
 \item{nr.burnin}{Number of iteration discarded for burnin period, default is 1000. Some models may need a longer burnin period.}
 
 \item{nr.thin}{Thinning rate, it must be a positive integer, the default value 1.}
-
-\item{be.quiet}{Do not print warning message if the model does not adapt default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.}
-
-\item{r2jags}{Which interface is used to link R to JAGS (rjags and R2jags) default value is R2Jags TRUE.}
 }
 \value{
 This function returns an object of the class "hmr". This object contains the MCMC output of
 each parameter and hyper-parameter in the model, the data frame used for fitting the model, the link function,
 type of random effects distribution and the splitting information for conflict of evidence analysis.
 
-The results of the object of the class metadiag can be extracted with R2jags or with rjags. In addition
+The results of the object of the class hmr can be extracted with R2jags. In addition
 a summary, a print and a plot function are implemented for this type of object.
 }
 \description{

@@ -194,7 +194,8 @@ mu.new ~ dnorm(mu, inv.var)
                                   n.chains = nr.chains,
                                   n.iter = nr.iterations,
                                   n.burnin = nr.burnin,
-                                  n.thin = nr.thin)
+                                  n.thin = nr.thin,
+                                  pD = TRUE)
 
 
 

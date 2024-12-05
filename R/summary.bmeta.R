@@ -56,7 +56,7 @@ summary.bmeta = function(object, digits = 3, ...) {
 
 #' @export
 
-print.summary.bmeta = function(x, digits, ...) {
+print.summary.bmeta = function(x, digits = 3, ...) {
   cat('Model specifications:\n')
   model.spec = x$model.specification
 
@@ -82,7 +82,7 @@ print.summary.bmeta = function(x, digits, ...) {
   cat('\n')
   cat(paste('DIC: ', round(x$DIC, digits), sep = ''))
   cat('\n')
-  cat(paste('pD: ', round(x$pD, digits), sep = ''))
+  cat(paste('pD: ',   round(x$pD, digits), sep = ''))
   cat('\n')
 }
 

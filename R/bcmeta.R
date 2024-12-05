@@ -40,8 +40,6 @@
 #' @param nr.adapt            Number of iterations in the adaptation process, defualt is 1000. Some models may need more iterations during adptation.
 #' @param nr.burnin           Number of iteration discared for burnin period, default is 1000. Some models may need a longer burnin period.
 #' @param nr.thin             Thinning rate, it must be a positive integer, the default value 1.
-#' @param be.quiet            Do not print warning message if the model does not adapt. The default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.
-#' @param r2jags              Which interface is used to link R to JAGS (rjags and R2jags), default value is R2Jags=TRUE.
 #'
 #' @return                    This function returns an object of the class "bcmeta". This object contains the MCMC
 #'                            output of each parameter and hyper-parameter in the model and
@@ -143,11 +141,8 @@ bcmeta = function(
   nr.iterations   = 10000,
   nr.adapt        = 1000,
   nr.burnin       = 1000,
-  nr.thin         = 1,
-  # Further options to link jags and R ...............................
-  be.quiet        = FALSE,
-  r2jags          = TRUE
-          )UseMethod("bcmeta")
+  nr.thin         = 1
+           )UseMethod("bcmeta")
 
 
 
@@ -174,12 +169,7 @@ bcmeta.default = function(
   nr.iterations   = 10000,
   nr.adapt        = 1000,
   nr.burnin       = 1000,
-  nr.thin         = 1,
-
-  # Further options to link jags and R ...............................
-  be.quiet        = FALSE,
-  r2jags          = TRUE
-)
+  nr.thin         = 1)
 {
 
   # Mixture of Normals Random effects meta-analysis
@@ -323,7 +313,7 @@ inv.var.mu <- pow(sd.mu, -2)
 
   model.bugs.connection <- textConnection(model.bugs)
 
-  if(r2jags == TRUE){
+
     # Use R2jags as interface for JAGS ...
     results <- jags(              data = data.bcmeta,
                                   parameters.to.save = par.bcmeta,
@@ -331,27 +321,8 @@ inv.var.mu <- pow(sd.mu, -2)
                                   n.chains = nr.chains,
                                   n.iter = nr.iterations,
                                   n.burnin = nr.burnin,
-                                  n.thin = nr.thin)
-  }
-  else {
-    # Use rjags as interface for JAGS ...
-    # Send the model to JAGS, check syntax, run ...
-    jm <- jags.model(file     = model.bugs.connection,
-                     data     = data.bcmeta,
-                     #  inits    = inits.model,
-                     n.chains = nr.chains,
-                     n.adapt  = nr.adapt,
-                     quiet    = be.quiet)
-
-    results <- coda.samples(jm,
-                            variable.names = par.bcmeta,
-                            n.iter         = nr.iterations)
-  }
-
-  if(r2jags == FALSE)
-  {cat("You are using the package rjags as interface to JAGS.", "\n")
-    cat("The plot functions for output analysis are not implemented in this jarbes version", "\n")
-  }
+                                  n.thin = nr.thin,
+                                  pD = TRUE)
 
   # Close text connection
   close(model.bugs.connection)

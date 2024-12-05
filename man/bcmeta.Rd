@@ -22,9 +22,7 @@ bcmeta(
   nr.iterations = 10000,
   nr.adapt = 1000,
   nr.burnin = 1000,
-  nr.thin = 1,
-  be.quiet = FALSE,
-  r2jags = TRUE
+  nr.thin = 1
 )
 }
 \arguments{
@@ -69,10 +67,6 @@ Note that E(nu) = b.0/b.1 and we need to choose b.0 << b.1.}
 \item{nr.burnin}{Number of iteration discared for burnin period, default is 1000. Some models may need a longer burnin period.}
 
 \item{nr.thin}{Thinning rate, it must be a positive integer, the default value 1.}
-
-\item{be.quiet}{Do not print warning message if the model does not adapt. The default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.}
-
-\item{r2jags}{Which interface is used to link R to JAGS (rjags and R2jags), default value is R2Jags=TRUE.}
 }
 \value{
 This function returns an object of the class "bcmeta". This object contains the MCMC

@@ -107,15 +107,11 @@
 #'
 #' @param nr.thin         Thinning rate, it must be a positive integer, the default value 1.
 #'
-#' @param be.quiet        Do not print warning message if the model does not adapt default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.
-#'
-#' @param r2jags          Which interface is used to link R to JAGS (rjags and R2jags) default value is R2Jags TRUE.
-#'
 #' @return This function returns an object of the class "hmr". This object contains the MCMC output of
 #' each parameter and hyper-parameter in the model, the data frame used for fitting the model, the link function,
 #' type of random effects distribution and the splitting information for conflict of evidence analysis.
 #'
-#' The results of the object of the class metadiag can be extracted with R2jags or with rjags. In addition
+#' The results of the object of the class hmr can be extracted with R2jags. In addition
 #' a summary, a print and a plot function are implemented for this type of object.
 #'
 #' @references Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis and combining randomized and nonrandomized results: a case study in diabetes. Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
@@ -419,11 +415,7 @@ hmr <- function(data,
                      nr.iterations   = 10000,
                      nr.adapt        = 1000,
                      nr.burnin       = 1000,
-                     nr.thin         = 1,
-                     # Further options to link jags and R ...............................
-                     be.quiet        = FALSE,
-                     r2jags          = TRUE
-)UseMethod("hmr")
+                     nr.thin         = 1)UseMethod("hmr")
 
 #' @export
 #'
@@ -457,11 +449,7 @@ hmr.default <- function(
   nr.iterations   = 10000,
   nr.adapt        = 1000,
   nr.burnin       = 1000,
-  nr.thin         = 1,
-  # Further options to link jags and R ...............................
-  be.quiet        = FALSE,
-  r2jags          = TRUE
-)
+  nr.thin         = 1)
 {
 
   # Model errors checking-----
@@ -1082,35 +1070,15 @@ eta.subgroup[i]  = alpha.0 + alpha.1*(x.subgroup[i] - mu.1)
   model.bugs <- blueprint(link, re, split.w, df.estimate)
   model.bugs.connection <- textConnection(model.bugs)
 
-  if(r2jags == TRUE){
-    # Use R2jags as interface for JAGS ...
+  # Use R2jags as interface for JAGS ...
     results <- jags(              data = data.model,
                                   parameters.to.save = parameters.model,
                                   model.file = model.bugs.connection,
                                   n.chains = nr.chains,
                                   n.iter = nr.iterations,
                                   n.burnin = nr.burnin,
-                                  n.thin = nr.thin)
-  }
-  else {
-    # Use rjags as interface for JAGS ...
-    # Send the model to JAGS, check syntax, run ...
-    jm <- jags.model(file     = model.bugs.connection,
-                     data     = data.model,
-                     #  inits    = inits.model,
-                     n.chains = nr.chains,
-                     n.adapt  = nr.adapt,
-                     quiet    = be.quiet)
-
-    results <- coda.samples(jm,
-                            variable.names = parameters.model,
-                            n.iter         = nr.iterations)
-  }
-
-  if(r2jags == FALSE)
-  {cat("You are using the package rjags as interface to JAGS.", "\n")
-    cat("The plot functions for output analysis are not implemented in this jarbes version", "\n")
-  }
+                                  n.thin = nr.thin,
+                                  pD = TRUE)
 
   # Close text conecction
   close(model.bugs.connection)
@@ -1124,7 +1092,6 @@ eta.subgroup[i]  = alpha.0 + alpha.1*(x.subgroup[i] - mu.1)
   results$re <- re
   results$data <- data
   results$two.by.two <- two.by.two
-  results$r2jags <- r2jags
   results$split.w <- split.w
   results$df.estimate <- df.estimate
 

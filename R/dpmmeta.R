@@ -31,7 +31,6 @@
 #' @param nr.adapt            Number of iterations in the adaptation process, default is 1000. Some models may need more iterations during adptation.
 #' @param nr.burnin           Number of iteration discard for burn-in period, default is 1000. Some models may need a longer burnin period.
 #' @param nr.thin             Thinning rate, it must be a positive integer, the default value 1.
-#' @param be.quiet            Do not print warning message if the model does not adapt. The default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.
 #'
 #' @return                    This function returns an object of the class "bmeta". This object contains the MCMC
 #'                            output of each parameter and hyper-parameter in the model and
@@ -88,10 +87,7 @@ dpmmeta = function(
     nr.iterations   = 10000,
     nr.adapt        = 1000,
     nr.burnin       = 1000,
-    nr.thin         = 1,
-    # Further options to link jags and R ...............................
-    be.quiet        = FALSE
-)UseMethod("dpmmeta")
+    nr.thin         = 1)UseMethod("dpmmeta")
 
 
 #' @export
@@ -110,11 +106,7 @@ dpmmeta.default = function(
     nr.iterations   = 10000,
     nr.adapt        = 1000,
     nr.burnin       = 1000,
-    nr.thin         = 1,
-
-    # Further options to link jags and R ...............................
-    be.quiet        = FALSE
-)
+    nr.thin         = 1)
 {
 
   # Data
@@ -211,7 +203,8 @@ results <- jags( data = data.dpm,
                  n.chains = nr.chains,
                  n.iter = nr.iterations,
                  n.burnin = nr.burnin,
-                 n.thin = nr.thin)
+                 n.thin = nr.thin,
+                 pD = TRUE)
 
 # Close text connection
 close(model.bugs.connection)

@@ -5,7 +5,7 @@
 \alias{stemcells}
 \title{Meta-analysis of 31 randomized controled trials (RCTs) with reported discrepancies}
 \format{
-A matrix with 31 rows and 5 columns. Each row represents study results, the columns are:
+A matrix with 31 rows and 11 columns. Each row represents study results, the columns are:
    \describe{
     \item{trial}{ID name of the trial.}
     \item{effect.size}{treatment effect is measured as the difference of the
@@ -16,6 +16,13 @@ A matrix with 31 rows and 5 columns. Each row represents study results, the colu
     \item{n.discrep}{Number of detected discrepancies in the published trial.
     Discrepancies are defined as two or more reported facts that cannot both be
     true because they are logically or mathematically incompatible.}
+    \item{Sequence}{Bias arising from the randomization process.}
+    \item{Allocation}{Bias due to deviations from intended interventions.}
+    \item{Blinding}{Bias introduced by lack of blinding.}
+    \item{Outcome}{Bias in measurement of the outcome.}
+    \item{Reporting}{Bias in selection of the reported result.}
+    \item{Other}{Selection bias, performance bias, detection bias, attrition bias, etc.}
+
     }
 }
 \source{

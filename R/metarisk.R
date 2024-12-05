@@ -62,10 +62,6 @@
 #'
 #' @param nr.thin         Thinning rate, it must be a positive integer, the default value is 1.
 #'
-#' @param be.quiet        Do not print warning message if the model does not adapt default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.
-#'
-#' @param r2jags          Which interface is used to link R to JAGS (rjags and R2jags) default value is R2Jags=TRUE.
-#'
 #' @return This function returns an object of the class "metarisk". This object contains the MCMC output of
 #' each parameter and hyper-parameter in the model, the data frame used for fitting the model, the link function,
 #' type of random effects distribution and the splitting information for conflict of evidence analysis.
@@ -414,11 +410,8 @@ metarisk <- function(data,
                      nr.iterations   = 10000,
                      nr.adapt        = 1000,
                      nr.burnin       = 1000,
-                     nr.thin         = 1,
-                     # Further options to link jags and R ...............................
-                     be.quiet        = FALSE,
-                     r2jags          = TRUE
-                     )UseMethod("metarisk")
+                     nr.thin         = 1)
+UseMethod("metarisk")
 
 #' @export
 #'
@@ -450,11 +443,7 @@ metarisk.default <- function(
 					nr.iterations   = 10000,
 					nr.adapt        = 1000,
 					nr.burnin       = 1000,
-          nr.thin         = 1,
-          # Further options to link jags and R ...............................
-					be.quiet        = FALSE,
-          r2jags          = TRUE
-          )
+          nr.thin         = 1)
 {
 
 
@@ -930,7 +919,7 @@ m15 <- paste(dm, link.probit,  re.sm.split.df,  par.probit)
 model.bugs <- blueprint(link, re, split.w, df.estimate)
 model.bugs.connection <- textConnection(model.bugs)
 
-if(r2jags == TRUE){
+
   # Use R2jags as interface for JAGS ...
   results <- jags(              data = data.model,
                   parameters.to.save = parameters.model,
@@ -939,28 +928,8 @@ if(r2jags == TRUE){
                             n.chains = nr.chains,
                               n.iter = nr.iterations,
                             n.burnin = nr.burnin,
-                              n.thin = nr.thin
-                       )
-  }
-  else {
-  # Use rjags as interface for JAGS ...
-  # Send the model to JAGS, check syntax, run ...
-	jm <- jags.model(file     = model.bugs.connection,
-	                 data     = data.model,
-                 #  inits    = inits.model,
-	                 n.chains = nr.chains,
-	                 n.adapt  = nr.adapt,
-	                 quiet    = be.quiet)
-
-	results <- coda.samples(jm,
-	                        variable.names = parameters.model,
-	                        n.iter         = nr.iterations)
-  }
-
-if(r2jags == FALSE)
-  {cat("You are using the package rjags as interface to JAGS.", "\n")
-   cat("The plot functions for output analysis are not implemented in this jarbes version", "\n")
-}
+                              n.thin = nr.thin,
+                                  pD = TRUE)
 
 # Close text connection
 close(model.bugs.connection)

@@ -116,7 +116,7 @@ NULL
 #' cells and the control group a placebo treatment.
 #'
 #'
-#' @format  A matrix with 31 rows and 5 columns. Each row represents study results, the columns are:
+#' @format  A matrix with 31 rows and 11 columns. Each row represents study results, the columns are:
 #'    \describe{
 #'     \item{trial}{ID name of the trial.}
 #'     \item{effect.size}{treatment effect is measured as the difference of the
@@ -127,6 +127,13 @@ NULL
 #'     \item{n.discrep}{Number of detected discrepancies in the published trial.
 #'     Discrepancies are defined as two or more reported facts that cannot both be
 #'     true because they are logically or mathematically incompatible.}
+#'     \item{Sequence}{Bias arising from the randomization process.}
+#'     \item{Allocation}{Bias due to deviations from intended interventions.}
+#'     \item{Blinding}{Bias introduced by lack of blinding.}
+#'     \item{Outcome}{Bias in measurement of the outcome.}
+#'     \item{Reporting}{Bias in selection of the reported result.}
+#'     \item{Other}{Selection bias, performance bias, detection bias, attrition bias, etc.}
+#'
 #'     }
 #'
 #' @references Verde, P. E. (2017) Two Examples of Bayesian Evidence Synthesis with the Hierarchical Meta-Regression Approach. Chap.9, pag 189-206. Bayesian Inference, ed. Tejedor, Javier Prieto. InTech.

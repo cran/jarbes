@@ -2,7 +2,7 @@
 % Please edit documentation in R/b3lmeta.R, R/plot.b3lmeta.R
 \name{plot.b3lmeta}
 \alias{plot.b3lmeta}
-\title{Generic plot function for bcmeta object in jarbes.}
+\title{Generic plot function for b3lmeta object in jarbes.}
 \usage{
 \method{plot}{b3lmeta}(
   x,
@@ -44,7 +44,7 @@
 \item{...}{\dots}
 }
 \description{
-Generic plot function for bcmeta object in jarbes.
+Generic plot function for b3lmeta object in jarbes.
 
 Generic plot function for b3lmeta object in jarbes.
 }
