@@ -322,8 +322,8 @@ inv.var.mu <- pow(sd.mu, -2)
                                   n.iter = nr.iterations,
                                   n.burnin = nr.burnin,
                                   n.thin = nr.thin,
-                                  pD = TRUE)
-
+                                  pD = TRUE)  # R2jags version > 0.8-9
+                                              # The pD must be specified when running the model.
   # Close text connection
   close(model.bugs.connection)
 

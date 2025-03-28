@@ -74,22 +74,6 @@ implemented for this type of object.
 library(jarbes)
 
 
-# Example: Stemcells
-
-data("stemcells")
-stemcells$TE = stemcells$effect.size
-stemcells$seTE = stemcells$se.effect
-
-bm1 = dpmmeta(stemcells)
-summary(bm1)
-plot(bm1, x.lim = c(-1, 7), y.lim = c(0, 1))
-
-diagnostic(bm1, study.names = stemcells$trial,
-           post.p.value.cut = 0.05,
-           lwd.forest = 0.5, shape.forest = 4)
-
-diagnostic(bm1, post.p.value.cut = 0.05,
-           lwd.forest = 0.5, shape.forest = 4)
 }
 
 }

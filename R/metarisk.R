@@ -84,9 +84,6 @@
 #' class \emph{mcmc.list}.
 #'
 #'
-#' @references Verde, P.E. and Curcio, D. (2019) Hierarchical Meta-Regression Modelling: The Case
-#' of The Pneumococcal Polysaccharide Vaccine. Technical Report.
-#'
 #' @references Verde, P.E. (2019) The hierarchical meta-regression
 #' approach and learning from clinical evidence.
 #' Biometrical Journal. 1 - 23.

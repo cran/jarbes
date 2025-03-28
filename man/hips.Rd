@@ -3,7 +3,7 @@
 \docType{data}
 \name{hips}
 \alias{hips}
-\title{Meta-analysis:}
+\title{Meta-analysis: generalized evidence synthesis of total hip replacement}
 \format{
 A dataframe with 15 rows and 12 columns. Each row represents study results, the columns are:
    \describe{

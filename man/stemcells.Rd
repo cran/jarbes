@@ -3,7 +3,7 @@
 \docType{data}
 \name{stemcells}
 \alias{stemcells}
-\title{Meta-analysis of 31 randomized controled trials (RCTs) with reported discrepancies}
+\title{Meta-analysis: 31 randomized controled trials (RCTs) with reported discrepancies}
 \format{
 A matrix with 31 rows and 11 columns. Each row represents study results, the columns are:
    \describe{
@@ -26,7 +26,7 @@ A matrix with 31 rows and 11 columns. Each row represents study results, the col
     }
 }
 \source{
-Nowbar, A N, et al. (2014) Discrepancies in autologous bone marrow stem cell trials and enhancemen of ejection fraction (DAMASCENE): weighted regression and meta-analysis. BMJ, 348,1-9.
+Nowbar, A N, et al. (2014) Discrepancies in autologous bone marrow stem cell trials and enhancement of ejection fraction (DAMASCENE): weighted regression and meta-analysis. BMJ, 348,1-9.
 }
 \description{
 Meta-analysis of 31 randomized controled trials (RCTs) of two treatment groups

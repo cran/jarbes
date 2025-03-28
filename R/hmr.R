@@ -116,9 +116,7 @@
 #'
 #' @references Verde, P.E, Ohmann, C., Icks, A. and Morbach, S. (2016) Bayesian evidence synthesis and combining randomized and nonrandomized results: a case study in diabetes. Statistics in Medicine. Volume 35, Issue 10, 10 May 2016, Pages: 1654 to 1675.
 #'
-#' @references Verde, P.E. (2017) The hierarchical meta-regression approach and learning from clinical evidence. Submited to the Biometrical Journal.
-#'
-#' @references Verde, P.E. (2018) The Hierarchical Meta-Regression Approach and Learning from Clinical Evidence. Technical report.
+#' @references Verde, P. E. (2019) Learning from Clinical Evidence: The Hierarchical Meta-Regression Approach. Biometrical Journal. Biometrical Journal; 1-23.
 #'
 #' @examples
 #'

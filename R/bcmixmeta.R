@@ -65,8 +65,8 @@
 #' implemented for this type of object.
 #'
 #'
-#' @references Verde, P.E. and Rosner, G. L. (2024) A Bias-Corrected Bayesian Nonparamteric Model for Combining
-#'              Studies with Varying Quality in Meta-Analysis. Biometrical Journal; (under revision).
+#' @references Verde, P.E., and Rosner, G.L. (2025), A Bias-Corrected Bayesian Nonparametric Model for Combining Studies With Varying Quality in Meta-Analysis. Biometrical Journal., 67: e70034. https://doi.org/10.1002/bimj.70034
+#'
 #'
 #' @examples
 #' \dontrun{
@@ -354,7 +354,9 @@ bcmixmeta.default = function(
                       "group",
                       "gind",
                       "equalsmatrix",
-                      "beta.x",
+                      "beta.x1",
+                      "beta.x2",
+                      "beta.x3",
                       "mu.x",
                       "mu.x.pred",
                       "alpha.0.bias",
@@ -512,11 +514,10 @@ mu.new ~ dnorm(mu.0,  inv.var.0)
               logit(p.bias[i,2]) = alpha.0.bias + alpha.1.bias*x[i]
               p.bias[i,1] = 1-p.bias[i,2]
 
-              theta[i] ~  dnorm(mu.0, inv.var.0)
-
-       #   theta[i] ~  dnorm(mu.x[i], inv.var.0)
-       #   mu.x[i] <- mu.0 + beta.x*x[i]
-       #  mu.x.pred[i] ~  dnorm(mu.x[i], inv.var.0)
+          theta[i] ~  dnorm(mu.x[i], inv.var.0)
+          mu.x[i] <- mu.0 + beta.x1*x[i]
+          #+ beta.x2*x[i]*x[i] + beta.x3*x[i]*x[i]*x[i]
+         mu.x.pred[i] ~  dnorm(mu.x[i], inv.var.0)
 
   # Dirichlet Process for biased component ............................
            beta[i] <- mu.k[group[i]]
@@ -552,7 +553,9 @@ mu.new ~ dnorm(mu.0,  inv.var.0)
           mu.0 ~ dnorm(mean.mu.0, inv.var.mu.0)
           inv.var.mu.0 <- pow(sd.mu.0, -2)
 
-          beta.x ~ dnorm(mean.mu.0, inv.var.mu.0)
+          beta.x1 ~ dnorm(mean.mu.0, inv.var.mu.0)
+         # beta.x2 ~ dnorm(mean.mu.0, inv.var.mu.0)
+         # beta.x3 ~ dnorm(mean.mu.0, inv.var.mu.0)
 
      inv.var.0 ~ dscaled.gamma(scale.sigma.between, df.scale.between)
 

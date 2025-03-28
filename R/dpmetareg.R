@@ -51,22 +51,7 @@
 #' library(jarbes)
 #'
 #'
-#' # Example: Stemcells
-#'
-#' data("stemcells")
-#' stemcells$TE = stemcells$effect.size
-#' stemcells$seTE = stemcells$se.effect
-#'
-#' bm1 = dpmmeta(stemcells)
-#' summary(bm1)
-#' plot(bm1, x.lim = c(-1, 7), y.lim = c(0, 1))
-#'
-#' diagnostic(bm1, study.names = stemcells$trial,
-#'            post.p.value.cut = 0.05,
-#'            lwd.forest = 0.5, shape.forest = 4)
-#'
-#' diagnostic(bm1, post.p.value.cut = 0.05,
-#'            lwd.forest = 0.5, shape.forest = 4)
+#
 #' }
 #'
 #' @import R2jags
@@ -158,13 +143,14 @@ dpmetareg.default = function(
         pre.y[i] <- pow(se.y[i], -2)
 
   # Dirichlet Process Random effects ..................
-       #  theta[i] <- mu.k[group[i]] + beta.k[group[i]]*x[i]
 
-          theta[i] ~ dnorm(mu.theta[i], inv.var.0)
+          theta[i] ~ dnorm(mu.theta[i], inv.var.0)                # This one possible way to use scale mixtures
+        #   theta[i] ~ dt(mu.theta[i], inv.var.0, 4)
 
-       #   mu.theta[i] <- mu.k[group[i]] + beta.k*x[i] # It works well
 
-           mu.theta[i] <- mu.k[group[i]] + beta.k[group[i]]*x[i]
+       #   mu.theta[i] <- mu.k[group[i]] + beta.k*x[i]            # This is DP + linear regression
+
+           mu.theta[i] <- mu.k[group[i]] + beta.k[group[i]]*x[i]  #  This is DDP
            group[i] ~ dcat(pi[])
 
 
@@ -178,7 +164,10 @@ dpmetareg.default = function(
   for(k in 1:K){
          mu.k[k] ~ dnorm(mu.0, inv.var.0)
        beta.k[k] ~ dnorm(mu.0, inv.var.0)
-      # theta.mu[k] <- mu.k[k] + beta.k[k]*x[]
+
+      #      mu.k[k] ~ dt(mu.0, inv.var.0, 4)   # This is the part to robustify  => no pasa nada!
+      #    beta.k[k] ~ dt(mu.0, inv.var.0, 4)   # but I need to investigate this part. => no pasa nada!
+
        }
 
   # Prior for mu.0

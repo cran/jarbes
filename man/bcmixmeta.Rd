@@ -197,6 +197,5 @@ legend(9, 20, legend = c("bias corrected", "biased"),
 
 }
 \references{
-Verde, P.E. and Rosner, G. L. (2024) A Bias-Corrected Bayesian Nonparamteric Model for Combining
-             Studies with Varying Quality in Meta-Analysis. Biometrical Journal; (under revision).
+Verde, P.E., and Rosner, G.L. (2025), A Bias-Corrected Bayesian Nonparametric Model for Combining Studies With Varying Quality in Meta-Analysis. Biometrical Journal., 67: e70034. https://doi.org/10.1002/bimj.70034
 }

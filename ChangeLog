@@ -1,5 +1,22 @@
 jarbes ChangeLog
 
+Version 2.2.5 -- March 2025 ....................................................
+
+- BC-BNP meta-regression in the function bcmixtmeta()
+- BC hierarchical meta-regression bchmr => function bchmr() is under construction
+
+Version 2.2.4 -- January-February 2025 .........................................
+
+- New data sets for case studies are made public available
+  * longcovid
+  * accupuncture
+  * diabetes_eyes
+  * macula_rwe
+  * colon_cancer
+  * fnrpcr
+  * tb
+
+
 Version 2.2.3 -- November-December 2024 ........................................
 
 - Correction of the summary functions where R2jags affected the pD values:

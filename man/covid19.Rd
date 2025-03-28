@@ -26,7 +26,7 @@ A dataframe with 89 rows and 12 columns. Each row represents study results, the 
 de Almeida-Pititto, B., Dualib, P.M., Zajdenverg, L. et al. Severity and mortality of COVID 19 in patients with diabetes, hypertension and cardiovascular disease: a meta-analysis. Diabetol Metab Syndr 12, 75 (2020). https://doi.org/10.1186/s13098-020-00586-4
 }
 \description{
-Meta-analysis of 40 Observational Studies from PubMed, Cocharane Library and SciELO databases
+Meta-analysis of 35 Observational Studies from PubMed, Cocharane Library and SciELO databases
 that assessed the impact of diabetes, hypertension, cardiovascular disease,
 and the use of ACEI/ARB on severity and mortality of COVID-19 cases.
 }
