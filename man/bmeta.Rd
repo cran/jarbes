@@ -15,7 +15,8 @@ bmeta(
   nr.adapt = 1000,
   nr.burnin = 1000,
   nr.thin = 1,
-  be.quiet = FALSE
+  be.quiet = FALSE,
+  parallel = NULL
 )
 }
 \arguments{
@@ -45,6 +46,8 @@ deviation between studies. Larger values e.g. 30 corresponds to a Half Normal di
 \item{nr.thin}{Thinning rate, it must be a positive integer, the default value 1.}
 
 \item{be.quiet}{Do not print warning message if the model does not adapt. The default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.}
+
+\item{parallel}{NULL -> jags, 'jags.parallel' -> jags.parallel execution}
 }
 \value{
 This function returns an object of the class "bmeta". This object contains the MCMC

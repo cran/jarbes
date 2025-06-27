@@ -106,6 +106,7 @@
 #' @param nr.burnin       Number of iteration discarded for burnin period, default is 1000. Some models may need a longer burnin period.
 #'
 #' @param nr.thin         Thinning rate, it must be a positive integer, the default value 1.
+#' @param parallel        NULL -> jags, 'jags.parallel' -> jags.parallel execution
 #'
 #' @return This function returns an object of the class "hmr". This object contains the MCMC output of
 #' each parameter and hyper-parameter in the model, the data frame used for fitting the model, the link function,
@@ -172,143 +173,207 @@
 #'#
 #'
 #'
-#'library(MASS)
-#'library(ggplot2)
-#'library(jarbes)
-#'library(gridExtra)
-#'library(mcmcplots)
-#'
-#'
-#'# Simulation of the IPD data
-#'
-#'invlogit <- function (x)
-#'{
+#' library(MASS)
+#' library(ggplot2)
+#' library(jarbes)
+#' library(gridExtra)
+#' library(mcmcplots)
+#' library(R2jags)
+#' 
+#' # Simulation of the IPD data
+#' 
+#' invlogit <- function (x)
+#' {
 #'  1/(1 + exp(-x))
-#'}
-#'
-#'# Data set for mu.phi = 0.5 .........................................
-#'
-#'# Parameters values
-#'mu.phi.true <- 0.5
-#'beta0 <- mu.1.true + mu.phi.true
-#'beta1 <- 2.5
-#'beta2 <- 2
-#'
-#'# Regression variables
-#'
-#'x1 <- rnorm(200)
-#'x2 <- rbinom(200, 1, 0.5)
-#'
-#'# Binary outcome as a function of "b0 + b1 * x1 + b2 * x2"
-#'
-#'y <- rbinom(200, 1,
+#' }
+#' 
+#' 
+#'  #Experiment 1: External validity bias
+#' 
+#' set.seed(2018)
+#'  # mean control
+#'  pc <- 0.7
+#'  # mean treatment
+#' pt <- 0.4
+#'  # reduction of "amputations" odds ratio
+#' OR <- (pt/(1-pt)) /(pc/(1-pc))
+#' OR
+#' 
+#' # mu_2
+#' log(OR)
+#' mu.2.true <- log(OR)
+#'  #sigma_2
+#'  sigma.2.true <- 0.5
+#'  # mu_1
+#' mu.1.true <- log(pc/(1-pc))
+#' mu.1.true
+#' #sigma_1
+#' sigma.1.true <- 1
+#' # rho
+#' rho.true <- -0.5
+#' Sigma <- matrix(c(sigma.1.true^2, sigma.1.true*sigma.2.true*rho.true,
+#'                   sigma.1.true*sigma.2.true*rho.true, sigma.2.true^2),
+#'                   byrow = TRUE, ncol = 2)
+#' Sigma
+#' 
+#' theta <- mvrnorm(35, mu = c(mu.1.true, mu.2.true),
+#'                  Sigma = Sigma )
+#' 
+#' 
+#' plot(theta, xlim = c(-2,3))
+#' abline(v=mu.1.true, lty = 2)
+#' abline(h=mu.2.true, lty = 2)
+#' abline(a = mu.2.true, b=sigma.2.true/sigma.1.true * rho.true, col = "red")
+#' abline(lm(theta[,2]~theta[,1]), col = "blue")
+#' 
+#' # Target group
+#' mu.T <- mu.1.true + 2 * sigma.1.true
+#' abline(v=mu.T, lwd = 3, col = "blue")
+#' eta.true <- mu.2.true + sigma.2.true/sigma.1.true*rho.true* mu.T
+#' eta.true
+#' exp(eta.true)
+#' abline(h = eta.true, lty =3, col = "blue")
+#' # Simulation of each primary study:
+#' n.c <- round(runif(35, min = 30, max = 60),0)
+#' n.t <- round(runif(35, min = 30, max = 60),0)
+#' y.c <- y.t <- rep(0, 35)
+#' p.c <- exp(theta[,1])/(1+exp(theta[,1]))
+#' p.t <- exp(theta[,2]+theta[,1])/(1+exp(theta[,2]+theta[,1]))
+#' for(i in 1:35)
+#' {
+#'   y.c[i] <- rbinom(1, n.c[i], prob = p.c[i])
+#'   y.t[i] <- rbinom(1, n.t[i], prob = p.t[i])
+#' }
+#' 
+#' AD.s1 <- data.frame(yc=y.c, nc=n.c, yt=y.t, nt=n.t)
+#' 
+#' # Data set for mu.phi = 0.5 .........................................
+#' 
+#' # Parameters values
+#' mu.phi.true <- 0.5
+#' pc = 0.7
+#' mu.1.true= log(pc/(1-pc))
+#' 
+#' beta0 <- mu.1.true + mu.phi.true
+#' beta1 <- 2.5
+#' beta2 <- 2
+#' 
+#' # Regression variables
+#' 
+#' x1 <- rnorm(200)
+#' x2 <- rbinom(200, 1, 0.5)
+#' 
+#' # Binary outcome as a function of "b0 + b1 * x1 + b2 * x2"
+#' 
+#' y <- rbinom(200, 1,
 #'          invlogit(beta0 + beta1 * x1 + beta2 * x2))
-#'
-#'
-#'# Preparing the plot to visualize the data
-#'jitter.binary <- function(a, jitt = 0.05)
-#'
+#' 
+#' 
+#' # Preparing the plot to visualize the data
+#' jitter.binary <- function(a, jitt = 0.05)
+#' 
 #'  ifelse(a==0, runif(length(a), 0, jitt),
 #'         runif(length(a), 1-jitt, 1))
-#'
-#'
-#'
-#'plot(x1, jitter.binary(y), xlab = "x1",
+#' 
+#' 
+#' plot(x1, jitter.binary(y), xlab = "x1",
 #'     ylab = "Success probability")
-#'
-#'curve(invlogit(beta0 + beta1*x),
+#' 
+#' curve(invlogit(beta0 + beta1*x),
 #'      from = -2.5, to = 2.5, add = TRUE, col ="blue", lwd = 2)
-#'curve(invlogit(beta0 + beta1*x + beta2),
+#' curve(invlogit(beta0 + beta1*x + beta2),
 #'      from = -2.5, to = 2.5, add = TRUE, col ="red", lwd =2)
-#'legend("bottomright", c("b2 = 0", "b2 = 2"),
+#' legend("bottomright", c("b2 = 0", "b2 = 2"),
 #'       col = c("blue", "red"), lwd = 2, lty = 1)
-#'
-#'noise <- rnorm(100*20)
-#'dim(noise) <- c(100, 20)
-#'n.names <- paste(rep("x", 20), seq(3, 22), sep="")
-#'colnames(noise) <- n.names
-#'
-#'data.IPD <- data.frame(y, x1, x2, noise)
-#'
-#'
-#'# Application of HMR ...........................................
-#'
-#'res.s2 <- hmr(AD.s1, two.by.two = FALSE,
+#' 
+#' noise <- rnorm(100*20)
+#' dim(noise) <- c(100, 20)
+#' n.names <- paste(rep("x", 20), seq(3, 22), sep="")
+#' colnames(noise) <- n.names
+#' 
+#' data.IPD <- data.frame(y, x1, x2, noise)
+#' 
+#' 
+#' # Application of HMR ...........................................
+#' 
+#' res.s2 <- hmr(AD.s1, two.by.two = FALSE,
 #'              dataIPD = data.IPD,
 #'              sd.mu.1 = 2,
 #'              sd.mu.2 = 2,
 #'              sd.mu.phi = 2,
 #'              sigma.1.upper = 5,
 #'              sigma.2.upper = 5,
-#'              sd.Fisher.rho = 1.5)
-#'
-#'
-#'print(res.s2)
-#'
-#'# Data set for mu.phi = 2 ......................................
-#'# Parameters values
-#'
-#'mu.phi.true <- 2
-#'beta0 <- mu.1.true + mu.phi.true
-#'beta1 <- 2.5
-#'beta2 <- 2
-#'
-#'# Regression variables
-#'x1 <- rnorm(200)
-#'x2 <- rbinom(200, 1, 0.5)
-#'# Binary outcome as a function of "b0 + b1 * x1 + b2 * x2"
-#'y <- rbinom(200, 1,
+#'              sd.Fisher.rho = 1.5,
+#'              parallel="jags.parallel")
+#' 
+#' 
+#' print(res.s2)
+#' 
+#' # Data set for mu.phi = 2 ......................................
+#' # Parameters values
+#' 
+#' mu.phi.true <- 2
+#' beta0 <- mu.1.true + mu.phi.true
+#' beta1 <- 2.5
+#' beta2 <- 2
+#' 
+#' # Regression variables
+#' x1 <- rnorm(200)
+#' x2 <- rbinom(200, 1, 0.5)
+#' # Binary outcome as a function of "b0 + b1 * x1 + b2 * x2"
+#' y <- rbinom(200, 1,
 #'            invlogit(beta0 + beta1 * x1 + beta2 * x2))
-#'
-#'# Preparing the plot to visualize the data
-#'jitter.binary <- function(a, jitt = 0.05)
-#'
+#' 
+#' # Preparing the plot to visualize the data
+#' jitter.binary <- function(a, jitt = 0.05)
+#' 
 #'  ifelse(a==0, runif(length(a), 0, jitt),
 #'         runif(length(a), 1-jitt, 1))
-#'
-#'plot(x1, jitter.binary(y), xlab = "x1",
+#' 
+#' plot(x1, jitter.binary(y), xlab = "x1",
 #'     ylab = "Success probability")
-#'
-#'curve(invlogit(beta0 + beta1*x),
+#' 
+#' curve(invlogit(beta0 + beta1*x),
 #'      from = -2.5, to = 2.5, add = TRUE, col ="blue", lwd = 2)
-#'curve(invlogit(beta0 + beta1*x + beta2),
+#' curve(invlogit(beta0 + beta1*x + beta2),
 #'      from = -2.5, to = 2.5, add = TRUE, col ="red", lwd =2)
-#'legend("bottomright", c("b2 = 0", "b2 = 2"),
+#' legend("bottomright", c("b2 = 0", "b2 = 2"),
 #'       col = c("blue", "red"), lwd = 2, lty = 1)
-#'
-#'noise <- rnorm(100*20)
-#'dim(noise) <- c(100, 20)
-#'n.names <- paste(rep("x", 20), seq(3, 22), sep="")
-#'colnames(noise) <- n.names
-#'
-#'data.IPD <- data.frame(y, x1, x2, noise)
-#'
-#'# Application of HMR ................................................
-#'
-#'
-#'res.s3 <- hmr(AD.s1, two.by.two = FALSE,
+#' 
+#' noise <- rnorm(100*20)
+#' dim(noise) <- c(100, 20)
+#' n.names <- paste(rep("x", 20), seq(3, 22), sep="")
+#' colnames(noise) <- n.names
+#' 
+#' data.IPD <- data.frame(y, x1, x2, noise)
+#' 
+#' # Application of HMR ............................................
+#' 
+#' 
+#' res.s3 <- hmr(AD.s1, two.by.two = FALSE,
 #'              dataIPD = data.IPD,
 #'              sd.mu.1 = 2,
 #'              sd.mu.2 = 2,
 #'              sd.mu.phi = 2,
 #'              sigma.1.upper = 5,
 #'              sigma.2.upper = 5,
-#'              sd.Fisher.rho = 1.5
-#')
-#'
-#'print(res.s3)
-#'
-#'# Posteriors for mu.phi ............................
-#'attach.jags(res.s2)
-#'mu.phi.0.5 <- mu.phi
-#'df.phi.05 <- data.frame(x = mu.phi.0.5)
-#'
-#'attach.jags(res.s3)
-#'mu.phi.1 <- mu.phi
-#'df.phi.1 <- data.frame(x = mu.phi.1)
-#'
-#'
-#'p1 <- ggplot(df.phi.05, aes(x=x))+
+#'              sd.Fisher.rho = 1.5,
+#'              parallel="jags.parallel"
+#' )
+#' 
+#' print(res.s3)
+#' 
+#' # Posteriors for mu.phi ............................
+#' attach.jags(res.s2)
+#' mu.phi.0.5 <- mu.phi
+#' df.phi.05 <- data.frame(x = mu.phi.0.5)
+#' 
+#' attach.jags(res.s3)
+#' mu.phi.1 <- mu.phi
+#' df.phi.1 <- data.frame(x = mu.phi.1)
+#' 
+#' 
+#' p1 <- ggplot(df.phi.05, aes(x=x))+
 #'  xlab(expression(mu[phi])) +
 #'  ylab("Posterior distribution")+
 #'  xlim(c(-7,7))+
@@ -319,8 +384,8 @@
 #'  stat_function(fun = dlogis,
 #'                n = 101,
 #'                args = list(location = 0, scale = 1), size = 1.5) + theme_bw()
-#'
-#'p2 <- ggplot(df.phi.1, aes(x=x))+
+#' 
+#' p2 <- ggplot(df.phi.1, aes(x=x))+
 #'  xlab(expression(mu[phi])) +
 #'  ylab("Posterior distribution")+
 #'  xlim(c(-7,7))+
@@ -331,45 +396,25 @@
 #'  stat_function(fun = dlogis,
 #'                n = 101,
 #'                args = list(location = 0, scale = 1), size = 1.5) + theme_bw()
-#'
-#'grid.arrange(p1, p2, ncol = 2, nrow = 1)
-#'
-#'
+#' 
+#' grid.arrange(p1, p2, ncol = 2, nrow = 1)
+#' 
+#' 
 #' # Cater plots for regression coefficients ...........................
-#'
+#' 
 #' var.names <- names(data.IPD[-1])
 #' v <- paste("beta", names(data.IPD[-1]), sep = ".")
-#' mcmc.x <- as.rjags.mcmc(res.s2$BUGSoutput$sims.matrix)
+#' 
 #' mcmc.x.2 <- as.mcmc.rjags(res.s2)
 #' mcmc.x.3 <- as.mcmc.rjags(res.s3)
-#'
+#' 
 #' greek.names <- paste(paste("beta[",1:22, sep=""),"]", sep="")
 #' par.names <- paste(paste("beta.IPD[",1:22, sep=""),"]", sep="")
-#'
-#' caterplot(mcmc.x.2,
-#'          parms = par.names,
-#'          col = "black", lty = 1,
-#'          labels = greek.names,
-#'          greek = T,
-#'          labels.loc="axis", cex =0.7,
-#'          style = "plain",reorder = F, denstrip = F)
-#'
-#'caterplot(mcmc.x.3,
-#'          parms = par.names,
-#'          col = "grey", lty = 2,
-#'          labels = greek.names,
-#'          greek = T,
-#'          labels.loc="axis", cex =0.7,
-#'          style = "plain",reorder = F, denstrip = F,
-#'          add = TRUE,
-#'          collapse=TRUE, cat.shift=-0.5)
-#'
-#'
-#'
-#'abline(v=0, lty = 2, lwd = 2)
-#'abline(v =2, lty = 2, lwd = 2)
-#'abline(v =2.5, lty = 2, lwd = 2)
-#'
+#' 
+#' caterplot_compare(mcmc.x.2, mcmc.x.3, par.names,
+#'                   plotmath_labels = greek.names,
+#'                   ref_lines = c(0, 2, 2.5))
+#'                   
 #' # End of the examples.
 #'
 #' }
@@ -413,7 +458,9 @@ hmr <- function(data,
                      nr.iterations   = 10000,
                      nr.adapt        = 1000,
                      nr.burnin       = 1000,
-                     nr.thin         = 1)UseMethod("hmr")
+                     nr.thin         = 1,
+
+                     parallel        = NULL)UseMethod("hmr")
 
 #' @export
 #'
@@ -447,9 +494,10 @@ hmr.default <- function(
   nr.iterations   = 10000,
   nr.adapt        = 1000,
   nr.burnin       = 1000,
-  nr.thin         = 1)
+  nr.thin         = 1,
+  parallel        = NULL)
 {
-
+  if(!is.null(parallel) && parallel != "jags.parallel") stop("The parallel option must be NULL or 'jags.parallel'")
   # Model errors checking-----
 
   if(re=="normal" & split.w==TRUE)stop("Normal random effects and splitting weights are not compatible options")
@@ -1066,20 +1114,41 @@ eta.subgroup[i]  = alpha.0 + alpha.1*(x.subgroup[i] - mu.1)
 
   #----
   model.bugs <- blueprint(link, re, split.w, df.estimate)
-  model.bugs.connection <- textConnection(model.bugs)
+  if (is.null(parallel)) { #execute R2jags
+    model.bugs.connection <- textConnection(model.bugs)
 
-  # Use R2jags as interface for JAGS ...
-    results <- jags(              data = data.model,
+    # Use R2jags as interface for JAGS ...
+
+    results <- jags( data = data.model,
+                     parameters.to.save = parameters.model,
+                     model.file = model.bugs.connection,
+                     n.chains = nr.chains,
+                     n.iter = nr.iterations,
+                     n.burnin = nr.burnin,
+                     n.thin = nr.thin,
+                     DIC = TRUE,
+                     pD=TRUE)
+
+    # Close text connection
+    close(model.bugs.connection)
+  }else if(parallel == "jags.parallel"){
+    writeLines(model.bugs, "model.bugs")
+    results <- jags.parallel(     data = data.model,
                                   parameters.to.save = parameters.model,
-                                  model.file = model.bugs.connection,
+                                  model.file = "model.bugs",
                                   n.chains = nr.chains,
                                   n.iter = nr.iterations,
                                   n.burnin = nr.burnin,
                                   n.thin = nr.thin,
-                                  pD = TRUE)
+                                  DIC=TRUE)
 
-  # Close text conecction
-  close(model.bugs.connection)
+    #Compute pD from result
+    results$BUGSoutput$pD = results$BUGSoutput$DIC - results$BUGSoutput$mean$deviance
+
+    # Delete model.bugs on exit ...
+    unlink("model.bugs")
+  }
+
 
   # Extra outputs that are linked with other functions ...
   IPD.names <- names(dataIPD)

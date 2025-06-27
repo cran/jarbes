@@ -40,6 +40,7 @@
 #' @param nr.adapt            Number of iterations in the adaptation process, defualt is 1000. Some models may need more iterations during adptation.
 #' @param nr.burnin           Number of iteration discared for burnin period, default is 1000. Some models may need a longer burnin period.
 #' @param nr.thin             Thinning rate, it must be a positive integer, the default value 1.
+#' @param parallel            NULL -> jags, 'jags.parallel' -> jags.parallel execution
 #'
 #' @return                    This function returns an object of the class "bcmeta". This object contains the MCMC
 #'                            output of each parameter and hyper-parameter in the model and
@@ -141,7 +142,8 @@ bcmeta = function(
   nr.iterations   = 10000,
   nr.adapt        = 1000,
   nr.burnin       = 1000,
-  nr.thin         = 1
+  nr.thin         = 1,
+  parallel        = NULL
            )UseMethod("bcmeta")
 
 
@@ -169,9 +171,10 @@ bcmeta.default = function(
   nr.iterations   = 10000,
   nr.adapt        = 1000,
   nr.burnin       = 1000,
-  nr.thin         = 1)
+  nr.thin         = 1,
+  parallel        = NULL)
 {
-
+  if(!is.null(parallel) && parallel != "jags.parallel") stop("The parallel option must be NULL or 'jags.parallel'")
   # Mixture of Normals Random effects meta-analysis
   #    y = sort(data$TE, na.last = TRUE)
   # se.y = data$seTE[order(data$TE, na.last = TRUE)]
@@ -198,16 +201,22 @@ bcmeta.default = function(
      T[max.index] = 2
 
      # This list describes the data used by the BUGS script.
-     data.bcmeta <- list ("y", "se.y", "N", "T",
-                          "mean.mu",
-                          "sd.mu",
-                          "scale.sigma.between",
-                          "df.scale.between",
-                          "B.lower",
-                          "B.upper",
-                          "a.0",
-                          "a.1",
-                          "nu")
+     data.bcmeta <-
+       list(y = y,
+            se.y = se.y,
+            N = N,
+            T = T,
+            mean.mu = mean.mu,
+            sd.mu = sd.mu,
+            scale.sigma.between = scale.sigma.between,
+            df.scale.between = df.scale.between,
+            B.lower = B.lower,
+            B.upper = B.upper,
+            a.0 = a.0,
+            a.1 = a.1,
+            nu = nu
+       )
+
 
      if(nu.estimate==TRUE) {
        data.bcmeta = data.bcmeta[-13]              # Remove "nu"
@@ -311,21 +320,41 @@ inv.var.mu <- pow(sd.mu, -2)
   }
   "
 
+if (is.null(parallel)) { #execute R2jags
   model.bugs.connection <- textConnection(model.bugs)
 
+  # Use R2jags as interface for JAGS ...
 
-    # Use R2jags as interface for JAGS ...
-    results <- jags(              data = data.bcmeta,
-                                  parameters.to.save = par.bcmeta,
-                                  model.file = model.bugs.connection,
-                                  n.chains = nr.chains,
-                                  n.iter = nr.iterations,
-                                  n.burnin = nr.burnin,
-                                  n.thin = nr.thin,
-                                  pD = TRUE)  # R2jags version > 0.8-9
-                                              # The pD must be specified when running the model.
+  results <- jags( data = data.bcmeta,
+                   parameters.to.save = par.bcmeta,
+                   model.file = model.bugs.connection,
+                   n.chains = nr.chains,
+                   n.iter = nr.iterations,
+                   n.burnin = nr.burnin,
+                   n.thin = nr.thin,
+                   DIC = TRUE,
+                   pD=TRUE)
+
   # Close text connection
   close(model.bugs.connection)
+}else if(parallel == "jags.parallel"){
+  writeLines(model.bugs, "model.bugs")
+  results <- jags.parallel(     data = data.bcmeta,
+                                parameters.to.save = par.bcmeta,
+                                model.file = "model.bugs",
+                                n.chains = nr.chains,
+                                n.iter = nr.iterations,
+                                n.burnin = nr.burnin,
+                                n.thin = nr.thin,
+                                DIC=TRUE)
+
+  #Compute pD from result
+  results$BUGSoutput$pD = results$BUGSoutput$DIC - results$BUGSoutput$mean$deviance
+
+  # Delete model.bugs on exit ...
+  unlink("model.bugs")
+}
+
 
   # Extra outputs that are linked with other functions ...
   results$data = data

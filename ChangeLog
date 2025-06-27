@@ -1,5 +1,18 @@
 jarbes ChangeLog
 
+Version 2.3.0 -- June 2025 ....................................................
+
+- Parallel computions in all functions using jags.parallel()...
+
+- SimData() function to simulate meta-analysis based on BC-BNP paper...
+
+- No more reverse dependency of mcmcplots...
+
+- New function for caterplot => caterplot_compare() compares one or two models outputs.
+
+- Corrected bug in the diagnostic.bcmeta(): B is used for bias and not  mu[,2] - mu[,1]
+
+
 Version 2.2.5 -- March 2025 ....................................................
 
 - BC-BNP meta-regression in the function bcmixtmeta()

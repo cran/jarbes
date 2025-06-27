@@ -119,8 +119,8 @@ diagnostic.bcmeta = function(object,
 
   # Data preparation
   p.bias.1 = object$BUGSoutput$sims.list$p.bias[,2]
-  mu = object$BUGSoutput$sims.list$mu[,1:2]
-  delta.1 =   mu[,2] -mu[,1]
+  #mu = object$BUGSoutput$sims.list$mu[,1:2]
+  delta.1 =   object$BUGSoutput$sims.list$B #- mu[,1]
 
   dat.post = data.frame(x=p.bias.1, y=delta.1)
   dat.post = dat.post[sample(1:S), ]

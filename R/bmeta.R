@@ -26,6 +26,7 @@
 #' @param nr.burnin           Number of iteration discard for burn-in period, default is 1000. Some models may need a longer burnin period.
 #' @param nr.thin             Thinning rate, it must be a positive integer, the default value 1.
 #' @param be.quiet            Do not print warning message if the model does not adapt. The default value is FALSE. If you are not sure about the adaptation period choose be.quiet=TRUE.
+#' @param parallel            NULL -> jags, 'jags.parallel' -> jags.parallel execution
 #'
 #' @return                    This function returns an object of the class "bmeta". This object contains the MCMC
 #'                            output of each parameter and hyper-parameter in the model and
@@ -91,7 +92,8 @@ bmeta = function(
   nr.burnin       = 1000,
   nr.thin         = 1,
   # Further options to link jags and R ...............................
-  be.quiet        = FALSE
+  be.quiet        = FALSE,
+  parallel        = NULL
           )UseMethod("bmeta")
 
 
@@ -113,10 +115,11 @@ bmeta.default = function(
   nr.thin         = 1,
 
   # Further options to link jags and R ...............................
-  be.quiet        = FALSE
+  be.quiet        = FALSE,
+  parallel        = NULL
 )
 {
-
+  if(!is.null(parallel) && parallel != "jags.parallel") stop("The parallel option must be NULL or 'jags.parallel'")
     # Data
      y = data$TE
   se.y = data$seTE
@@ -128,11 +131,16 @@ bmeta.default = function(
      #y.ghost = rep(NA, N)
 
      # This list describes the data used by the BUGS script.
-     data.bmeta <- list ("y", "se.y", "N",
-                          "mean.mu",
-                          "sd.mu",
-                          "scale.sigma.between",
-                          "df.scale.between")
+     data.bmeta <-
+       list(y = y,
+            se.y = se.y,
+            N = N,
+            mean.mu = mean.mu,
+            sd.mu = sd.mu,
+            scale.sigma.between = scale.sigma.between,
+            df.scale.between = df.scale.between
+       )
+
 
      # List of parameters
      par.bmeta  <- c("theta",
@@ -185,22 +193,43 @@ mu.new ~ dnorm(mu, inv.var)
   }
   "
 
+if (is.null(parallel)) { #execute R2jags
   model.bugs.connection <- textConnection(model.bugs)
 
   # Use R2jags as interface for JAGS ...
-    results <- jags(              data = data.bmeta,
-                                  parameters.to.save = par.bmeta,
-                                  model.file = model.bugs.connection,
-                                  n.chains = nr.chains,
-                                  n.iter = nr.iterations,
-                                  n.burnin = nr.burnin,
-                                  n.thin = nr.thin,
-                                  pD = TRUE)
 
-
+  results <- jags( data = data.bmeta,
+                   parameters.to.save = par.bmeta,
+                   model.file = model.bugs.connection,
+                   n.chains = nr.chains,
+                   n.iter = nr.iterations,
+                   n.burnin = nr.burnin,
+                   n.thin = nr.thin,
+                   DIC = TRUE,
+                   pD = TRUE)
 
   # Close text connection
   close(model.bugs.connection)
+}else if(parallel == "jags.parallel"){
+  writeLines(model.bugs, "model.bugs")
+
+  results <- jags.parallel(     data = data.bmeta,
+                                parameters.to.save = par.bmeta,
+                                model.file = "model.bugs",
+                                n.chains = nr.chains,
+                                n.iter = nr.iterations,
+                                n.burnin = nr.burnin,
+                                n.thin = nr.thin,
+                                DIC = TRUE)
+
+  # Compute pD from result
+  results$BUGSoutput$pD = results$BUGSoutput$DIC - results$BUGSoutput$mean$deviance
+
+  # Delete model.bugs on exit ...
+  unlink("model.bugs")
+
+  }
+
 
   # Extra outputs that are linked with other functions ...
   results$data = data

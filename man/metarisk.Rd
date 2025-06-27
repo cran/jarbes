@@ -26,7 +26,8 @@ metarisk(
   nr.iterations = 10000,
   nr.adapt = 1000,
   nr.burnin = 1000,
-  nr.thin = 1
+  nr.thin = 1,
+  parallel = NULL
 )
 }
 \arguments{
@@ -85,6 +86,8 @@ The default value is FALSE.}
 \item{nr.burnin}{Number of iteration discared for burnin period, default is 1000. Some models may need a longer burnin period.}
 
 \item{nr.thin}{Thinning rate, it must be a positive integer, the default value is 1.}
+
+\item{parallel}{NULL -> jags, 'jags.parallel' -> jags.parallel execution}
 }
 \value{
 This function returns an object of the class "metarisk". This object contains the MCMC output of
@@ -135,7 +138,7 @@ library(MASS)
 library(ggplot2)
 library(jarbes)
 library(gridExtra)
-library(mcmcplots)
+
 
 #Experiment 1: External validity bias
 

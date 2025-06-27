@@ -21,7 +21,8 @@ bcdpmeta(
   nr.iterations = 10000,
   nr.adapt = 1000,
   nr.burnin = 1000,
-  nr.thin = 1
+  nr.thin = 1,
+  parallel = NULL
 )
 }
 \arguments{
@@ -65,6 +66,8 @@ default value is alpha.1 = 10.}
 \item{nr.burnin}{Number of iteration discard for burn-in period, default is 1000. Some models may need a longer burnin period.}
 
 \item{nr.thin}{Thinning rate, it must be a positive integer, the default value 1.}
+
+\item{parallel}{NULL -> jags, 'jags.parallel' -> jags.parallel execution}
 }
 \value{
 This function returns an object of the class "bcdpmeta". This object contains the MCMC

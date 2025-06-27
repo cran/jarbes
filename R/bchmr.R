@@ -64,6 +64,7 @@
 #' @param nr.burnin       Number of iteration discarded for burnin period, default is 1000. Some models may need a longer burnin period.
 #'
 #' @param nr.thin         Thinning rate, it must be a positive integer, the default value 1.
+#' @param parallel        NULL -> jags, 'jags.parallel' -> jags.parallel execution
 #'
 #' @return This function returns an object of the class "bchmr". This object contains the MCMC output of
 #' each parameter and hyper-parameter in the model, the data frame used for fitting the model, and further model outputs.
@@ -145,12 +146,13 @@ bchmr <- function(data,
                 sigma.beta.upper = 5,
                 mean.Fisher.rho = 0,
                 sd.Fisher.rho   = 1/sqrt(2),
-               # MCMC setup........................................................
+               # MCMC setup..............................................
                 nr.chains       = 2,
                 nr.iterations   = 10000,
                 nr.adapt        = 1000,
                 nr.burnin       = 1000,
-                nr.thin         = 1)UseMethod("bchmr")
+                nr.thin         = 1,
+               parallel        = NULL)UseMethod("bchmr")
 
 #' @export
 #'
@@ -177,9 +179,10 @@ bchmr.default <- function(
     nr.iterations   = 10000,
     nr.adapt        = 1000,
     nr.burnin       = 1000,
-    nr.thin         = 1)
+    nr.thin         = 1,
+    parallel        = NULL)
 {
-
+  if(!is.null(parallel) && parallel != "jags.parallel") stop("The parallel option must be NULL or 'jags.parallel'")
 
 
   # Setting up hyperparameters ...
@@ -390,20 +393,41 @@ eta.subgroup[i]  = alpha.0 + alpha.1*(x.subgroup[i] - mu.1)
 model.bugs <- paste(dm, link.logit, re.normal, par.logit)
 #----
 
-model.bugs.connection <- textConnection(model.bugs)
+if (is.null(parallel)) { #execute R2jags
+  model.bugs.connection <- textConnection(model.bugs)
 
-# Use R2jags as interface for JAGS ...
-results <- jags(              data = data.model,
-                              parameters.to.save = parameters.model,
-                              model.file = model.bugs.connection,
-                              n.chains = nr.chains,
-                              n.iter = nr.iterations,
-                              n.burnin = nr.burnin,
-                              n.thin = nr.thin,
-                              pD = TRUE)
+  # Use R2jags as interface for JAGS ...
 
-# Close text conecction
-close(model.bugs.connection)
+  results <- jags( data = data.model,
+                   parameters.to.save = parameters.model,
+                   model.file = model.bugs.connection,
+                   n.chains = nr.chains,
+                   n.iter = nr.iterations,
+                   n.burnin = nr.burnin,
+                   n.thin = nr.thin,
+                   DIC = TRUE,
+                   pD=TRUE)
+
+  # Close text connection
+  close(model.bugs.connection)
+}else if(parallel == "jags.parallel"){
+  writeLines(model.bugs, "model.bugs")                          # Why we need this line?
+  results <- jags.parallel(     data = data.model,
+                                parameters.to.save = parameters.model,
+                                model.file = "model.bugs",
+                                n.chains = nr.chains,
+                                n.iter = nr.iterations,
+                                n.burnin = nr.burnin,
+                                n.thin = nr.thin,
+                                DIC=TRUE)
+
+  #Compute pD from result
+  results$BUGSoutput$pD = results$BUGSoutput$DIC - results$BUGSoutput$mean$deviance
+
+  # Delete model.bugs on exit ...
+  unlink("model.bugs")
+}
+
 
 # Extra outputs that are linked with other functions ...
 IPD.names <- names(dataIPD)

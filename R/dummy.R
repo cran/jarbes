@@ -9,6 +9,6 @@ dummy <- function() {
   bookdown::clean_book
   grid::arrow
   kableExtra::footnote
-  mcmcplots::caterplot
+#  mcmcplots::caterplot
   qpdf::pdf_subset
 }

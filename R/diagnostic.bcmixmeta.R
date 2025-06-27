@@ -119,9 +119,9 @@ diagnostic.bcmixmeta = function(object,
   # Bias plot ....................................................................
 
   # Data preparation
-  p.bias.1 = object$BUGSoutput$sims.list$p.bias[,2]
-  mu.0 = object$BUGSoutput$sims.list$mu.0
-  delta.1 =  object$BUGSoutput$sims.list$B
+  p.bias.1 = object$BUGSoutput$sims.list$p.bias[ ,2]
+      #mu.0 = object$BUGSoutput$sims.list$mu.0
+   delta.1 =  object$BUGSoutput$sims.list$B #object$BUGSoutput$sims.list$beta[, 66]  #
 
   dat.post = data.frame(x = p.bias.1, y = delta.1)
   dat.post = dat.post[sample(1:S), ]

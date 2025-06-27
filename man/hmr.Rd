@@ -30,7 +30,8 @@ hmr(
   nr.iterations = 10000,
   nr.adapt = 1000,
   nr.burnin = 1000,
-  nr.thin = 1
+  nr.thin = 1,
+  parallel = NULL
 )
 }
 \arguments{
@@ -103,6 +104,8 @@ The default value is FALSE.}
 \item{nr.burnin}{Number of iteration discarded for burnin period, default is 1000. Some models may need a longer burnin period.}
 
 \item{nr.thin}{Thinning rate, it must be a positive integer, the default value 1.}
+
+\item{parallel}{NULL -> jags, 'jags.parallel' -> jags.parallel execution}
 }
 \value{
 This function returns an object of the class "hmr". This object contains the MCMC output of
@@ -203,7 +206,7 @@ library(ggplot2)
 library(jarbes)
 library(gridExtra)
 library(mcmcplots)
-
+library(R2jags)
 
 # Simulation of the IPD data
 
@@ -212,10 +215,73 @@ invlogit <- function (x)
  1/(1 + exp(-x))
 }
 
+
+ #Experiment 1: External validity bias
+
+set.seed(2018)
+ # mean control
+ pc <- 0.7
+ # mean treatment
+pt <- 0.4
+ # reduction of "amputations" odds ratio
+OR <- (pt/(1-pt)) /(pc/(1-pc))
+OR
+
+# mu_2
+log(OR)
+mu.2.true <- log(OR)
+ #sigma_2
+ sigma.2.true <- 0.5
+ # mu_1
+mu.1.true <- log(pc/(1-pc))
+mu.1.true
+#sigma_1
+sigma.1.true <- 1
+# rho
+rho.true <- -0.5
+Sigma <- matrix(c(sigma.1.true^2, sigma.1.true*sigma.2.true*rho.true,
+                  sigma.1.true*sigma.2.true*rho.true, sigma.2.true^2),
+                  byrow = TRUE, ncol = 2)
+Sigma
+
+theta <- mvrnorm(35, mu = c(mu.1.true, mu.2.true),
+                 Sigma = Sigma )
+
+
+plot(theta, xlim = c(-2,3))
+abline(v=mu.1.true, lty = 2)
+abline(h=mu.2.true, lty = 2)
+abline(a = mu.2.true, b=sigma.2.true/sigma.1.true * rho.true, col = "red")
+abline(lm(theta[,2]~theta[,1]), col = "blue")
+
+# Target group
+mu.T <- mu.1.true + 2 * sigma.1.true
+abline(v=mu.T, lwd = 3, col = "blue")
+eta.true <- mu.2.true + sigma.2.true/sigma.1.true*rho.true* mu.T
+eta.true
+exp(eta.true)
+abline(h = eta.true, lty =3, col = "blue")
+# Simulation of each primary study:
+n.c <- round(runif(35, min = 30, max = 60),0)
+n.t <- round(runif(35, min = 30, max = 60),0)
+y.c <- y.t <- rep(0, 35)
+p.c <- exp(theta[,1])/(1+exp(theta[,1]))
+p.t <- exp(theta[,2]+theta[,1])/(1+exp(theta[,2]+theta[,1]))
+for(i in 1:35)
+{
+  y.c[i] <- rbinom(1, n.c[i], prob = p.c[i])
+  y.t[i] <- rbinom(1, n.t[i], prob = p.t[i])
+}
+
+AD.s1 <- data.frame(yc=y.c, nc=n.c, yt=y.t, nt=n.t)
+
 # Data set for mu.phi = 0.5 .........................................
 
 # Parameters values
 mu.phi.true <- 0.5
+pc = 0.7
+mu.1.true= log(pc/(1-pc))
+
 beta0 <- mu.1.true + mu.phi.true
 beta1 <- 2.5
 beta2 <- 2
@@ -236,7 +302,6 @@ jitter.binary <- function(a, jitt = 0.05)
 
  ifelse(a==0, runif(length(a), 0, jitt),
         runif(length(a), 1-jitt, 1))
-
 
 
 plot(x1, jitter.binary(y), xlab = "x1",
@@ -266,7 +331,8 @@ res.s2 <- hmr(AD.s1, two.by.two = FALSE,
              sd.mu.phi = 2,
              sigma.1.upper = 5,
              sigma.2.upper = 5,
-             sd.Fisher.rho = 1.5)
+             sd.Fisher.rho = 1.5,
+             parallel="jags.parallel")
 
 
 print(res.s2)
@@ -309,7 +375,7 @@ colnames(noise) <- n.names
 
 data.IPD <- data.frame(y, x1, x2, noise)
 
-# Application of HMR ................................................
+# Application of HMR ............................................
 
 
 res.s3 <- hmr(AD.s1, two.by.two = FALSE,
@@ -319,7 +385,8 @@ res.s3 <- hmr(AD.s1, two.by.two = FALSE,
              sd.mu.phi = 2,
              sigma.1.upper = 5,
              sigma.2.upper = 5,
-             sd.Fisher.rho = 1.5
+             sd.Fisher.rho = 1.5,
+             parallel="jags.parallel"
 )
 
 print(res.s3)
@@ -365,37 +432,17 @@ grid.arrange(p1, p2, ncol = 2, nrow = 1)
 
 var.names <- names(data.IPD[-1])
 v <- paste("beta", names(data.IPD[-1]), sep = ".")
-mcmc.x <- as.rjags.mcmc(res.s2$BUGSoutput$sims.matrix)
+
 mcmc.x.2 <- as.mcmc.rjags(res.s2)
 mcmc.x.3 <- as.mcmc.rjags(res.s3)
 
 greek.names <- paste(paste("beta[",1:22, sep=""),"]", sep="")
 par.names <- paste(paste("beta.IPD[",1:22, sep=""),"]", sep="")
 
-caterplot(mcmc.x.2,
-         parms = par.names,
-         col = "black", lty = 1,
-         labels = greek.names,
-         greek = T,
-         labels.loc="axis", cex =0.7,
-         style = "plain",reorder = F, denstrip = F)
-
-caterplot(mcmc.x.3,
-         parms = par.names,
-         col = "grey", lty = 2,
-         labels = greek.names,
-         greek = T,
-         labels.loc="axis", cex =0.7,
-         style = "plain",reorder = F, denstrip = F,
-         add = TRUE,
-         collapse=TRUE, cat.shift=-0.5)
-
-
-
-abline(v=0, lty = 2, lwd = 2)
-abline(v =2, lty = 2, lwd = 2)
-abline(v =2.5, lty = 2, lwd = 2)
-
+caterplot_compare(mcmc.x.2, mcmc.x.3, par.names,
+                  plotmath_labels = greek.names,
+                  ref_lines = c(0, 2, 2.5))
+                  
 # End of the examples.
 
 }

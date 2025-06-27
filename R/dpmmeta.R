@@ -31,6 +31,7 @@
 #' @param nr.adapt            Number of iterations in the adaptation process, default is 1000. Some models may need more iterations during adptation.
 #' @param nr.burnin           Number of iteration discard for burn-in period, default is 1000. Some models may need a longer burnin period.
 #' @param nr.thin             Thinning rate, it must be a positive integer, the default value 1.
+#' @param parallel            NULL -> jags, 'jags.parallel' -> jags.parallel execution
 #'
 #' @return                    This function returns an object of the class "bmeta". This object contains the MCMC
 #'                            output of each parameter and hyper-parameter in the model and
@@ -87,7 +88,8 @@ dpmmeta = function(
     nr.iterations   = 10000,
     nr.adapt        = 1000,
     nr.burnin       = 1000,
-    nr.thin         = 1)UseMethod("dpmmeta")
+    nr.thin         = 1,
+    parallel        = NULL)UseMethod("dpmmeta")
 
 
 #' @export
@@ -106,9 +108,10 @@ dpmmeta.default = function(
     nr.iterations   = 10000,
     nr.adapt        = 1000,
     nr.burnin       = 1000,
-    nr.thin         = 1)
+    nr.thin         = 1,
+    parallel        = NULL)
 {
-
+  if(!is.null(parallel) && parallel != "jags.parallel") stop("The parallel option must be NULL or 'jags.parallel'")
   # Data
   y = data$TE
   se.y = data$seTE
@@ -120,14 +123,19 @@ dpmmeta.default = function(
 
 
    # This list describes the data used by the BUGS script.
-  data.dpm = list ("y", "se.y", "N",
-                   "mean.mu.0",
-                   "sd.mu.0",
-                   "scale.sigma.between",
-                   "df.scale.between",
-                   "alpha.0",
-                   "alpha.1",
-                   "K")
+  data.dpm <-
+    list(y = y,
+         se.y = se.y,
+         N = N,
+         mean.mu.0 = mean.mu.0,
+         sd.mu.0 = sd.mu.0,
+         scale.sigma.between = scale.sigma.between,
+         df.scale.between = df.scale.between,
+         alpha.0 = alpha.0,
+         alpha.1 = alpha.1,
+         K = K
+    )
+
 
   # List of parameters
   par.dpm  <- c("mu.k",
@@ -193,21 +201,41 @@ dpmmeta.default = function(
   }
   "
 
-model.bugs.connection <- textConnection(model.bugs)
+  if (is.null(parallel)) { #execute R2jags
+    model.bugs.connection <- textConnection(model.bugs)
 
-# Use R2jags as interface for JAGS ...
+    # Use R2jags as interface for JAGS ...
 
-results <- jags( data = data.dpm,
-                 parameters.to.save = par.dpm,
-                 model.file = model.bugs.connection,
-                 n.chains = nr.chains,
-                 n.iter = nr.iterations,
-                 n.burnin = nr.burnin,
-                 n.thin = nr.thin,
-                 pD = TRUE)
+    results <- jags( data = data.dpm,
+                     parameters.to.save = par.dpm,
+                     model.file = model.bugs.connection,
+                     n.chains = nr.chains,
+                     n.iter = nr.iterations,
+                     n.burnin = nr.burnin,
+                     n.thin = nr.thin,
+                     DIC = TRUE,
+                     pD=TRUE)
 
-# Close text connection
-close(model.bugs.connection)
+    # Close text connection
+    close(model.bugs.connection)
+  }else if(parallel == "jags.parallel"){
+    writeLines(model.bugs, "model.bugs")
+    results <- jags.parallel(     data = data.dpm,
+                                  parameters.to.save = par.dpm,
+                                  model.file = "model.bugs",
+                                  n.chains = nr.chains,
+                                  n.iter = nr.iterations,
+                                  n.burnin = nr.burnin,
+                                  n.thin = nr.thin,
+                                  DIC=TRUE)
+
+    #Compute pD from result
+    results$BUGSoutput$pD = results$BUGSoutput$DIC - results$BUGSoutput$mean$deviance
+
+    # Delete model.bugs on exit ...
+    unlink("model.bugs")
+  }
+
 
 # Extra outputs that are linked with other functions ...
 results$data = data
