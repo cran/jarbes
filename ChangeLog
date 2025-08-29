@@ -1,5 +1,44 @@
 jarbes ChangeLog
 
+Version 2.4.0 -- July-August 2025 .............................................
+
+No more dependence on bayesplot package ....
+
+- New functions:
+
+bcbnp(): New function to perform the BC-BNP meta-regression with DP mixture of normals!
+plot.bcbnp()
+summary.bcbnp()
+plotdata_reg.bcbnp()
+cocluster_plot() generates a heatmap for the co-clustering studies of bias
+forestplot_compare() replaced the caterplot_compare() function...
+plot_data() generates a forest plot and a forest plot for meta-regression
+
+- We updated the following functions:
+
+plot.bcmixmeta()
+plot.bmeta()
+plot.dpmeta()
+summary.bmeta()
+summary.bcmeta()
+
+- Ongoing:
+bchmr(): a DP for the weights is added (planned)
+
+- Further updates ...
+
+bcmixmeta():
+
+- Adds an NA to the data to generates the posterior predictive distribution automatically.
+
+dpmeta(): - Adds an NA to the data to generates the posterior predictive distribution automatically.
+
+diagnostic.bcmixmeta(): - Plots delta.new = (beta.new) vs. bias probability
+
+effect.hmr(): - The simulated posterior predictive distribution is cleaned when NA or Inf are produced.
+
+
+
 Version 2.3.0 -- June 2025 ....................................................
 
 - Parallel computions in all functions using jags.parallel()...

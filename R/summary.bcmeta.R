@@ -11,63 +11,61 @@ summary.bcmeta = function(object, digits = 3, ...) {
 
   summary.m = list()
 
-  # Model specifications ....
-  #
+  # Model specifications
   model.spec = list()
   model.spec$link = "Normal approximation"
 
-  # Hyper-priors parameters............................................
-  model.spec$mean.mu     = object$prior$mean.mu
-  model.spec$sd.mu       = object$prior$sd.mu
-  model.spec$scale.sigma.between = object$prior$scale.sigma.between
-  model.spec$df.scale.between    = object$prior$df.scale.between
-  model.spec$B.lower     = object$prior$B.lower
-  model.spec$B.upper     = object$prior$B.upper
-  #
-  model.spec$a.0         = object$prior$a.0
-  model.spec$a.1         = object$prior$a.1
-  model.spec$nu          = object$prior$nu
-  # model.spec$nu.estimate = object$prior$nu.estimate
-  # model.spec$b.0 = object$$priorb.0
-  # model.spec$b.1 = object$prior$b.1
+  # Hyper-priors for corrected model and bias model
+  model.spec$hyper_corrected = list(
+    mean.mu = object$prior$mean.mu,
+    sd.mu = object$prior$sd.mu,
+    scale.sigma.between = object$prior$scale.sigma.between,
+    df.scale.between = object$prior$df.scale.between
+  )
+
+  model.spec$hyper_bias = list(
+    B.lower = object$prior$B.lower,
+    B.upper = object$prior$B.upper,
+    a.0 = object$prior$a.0,
+    a.1 = object$prior$a.1,
+    nu = object$prior$nu
+  )
 
   summary.m$model.specification = model.spec
 
   # Posterior of the model parameters
-  #
-  # The list of parameters will include more complex models, e.g. estimation of
-  # the parameters nu from the Beta ...
-  #
-  summary.m$summary.par = bugs.summary[c("mu[1]", "mu.new", "tau", "mu[2]","p.bias[2]"),]
 
-  row.names(summary.m$summary.par) = c("Mean (corrected)",
-                                       "Predictive effect (corrected)",
-                                       "Tau (between studies sd)",
-                                       "Mean bias",
-                                       "Prob. biased class")
+  # Model of Interest (Bias-Corrected)
+  param_corrected_names = c("mu[1]", "mu.new", "tau")
+  summary.m$model_corrected = bugs.summary[param_corrected_names, , drop = FALSE]
 
-  # predictive effects
-  # summary.m$summary.predictive.effects = bugs.summary[c("Odds.new",
-  #                                                     "P_control.new"),]
+  row.names(summary.m$model_corrected) = c("Mean (corrected)",
+                                           "Predictive effect (corrected)",
+                                           "Tau (between studies sd)")
 
-  # DIC
+  # Model of Bias
+  param_bias_names = c("mu[2]", "p.bias[2]")
+  summary.m$model_biased = bugs.summary[param_bias_names, , drop = FALSE]
+
+  row.names(summary.m$model_biased) = c("Mean bias", "Prob. biased class")
+
+  # DIC and MCMC setup
   summary.m$DIC = bugs.output$DIC
   summary.m$pD = bugs.output$pD
 
-  # MCMC setup ...
-  mcmc.setup = list()
-  mcmc.setup$n.chains = bugs.output$n.chains
-  mcmc.setup$n.iter = bugs.output$n.iter
-  mcmc.setup$n.burnin = bugs.output$n.burnin
+  mcmc.setup = list(
+    n.chains = bugs.output$n.chains,
+    n.iter = bugs.output$n.iter,
+    n.burnin = bugs.output$n.burnin
+  )
   summary.m$mcmc.setup = mcmc.setup
 
   class(summary.m) = "summary.bcmeta"
 
- print(summary.m, digits, ...)
+  print(summary.m, digits, ...)
 }
 
 #' @export
-#'
 print.summary.bcmeta = function(x, digits, ...) {
   cat('Model specifications:\n')
   model.spec = x$model.specification
@@ -75,30 +73,36 @@ print.summary.bcmeta = function(x, digits, ...) {
   cat(paste('  Link function: ', model.spec$link, sep = ''))
   cat('\n')
   cat('\n')
-  cat('  Hyper-priors parameters: \n')
-  cat(paste('  Prior for mu: Normal', '[', model.spec$mean.mu,', ' ,model.spec$sd.mu^2,']', sep = ''))
+
+  cat('  Hyper-priors parameters for the Model of Interest (Bias-Corrected):\n')
+  hyper_corrected = model.spec$hyper_corrected
+  cat(paste('  Prior for mu: Normal', '[', hyper_corrected$mean.mu,', ' ,hyper_corrected$sd.mu^2,']', sep = ''))
   cat('\n')
-  cat(paste('  Prior bias interval: Uniform', '[', model.spec$B.lower,', ' ,model.spec$B.upper,']', sep = ''))
-  cat('\n')
-  cat(paste('  Prior for 1/tau^2: Scale.Gamma', '[', model.spec$scale.sigma.between,', ' ,
-            model.spec$df.scale.between,']', sep = ''))
-  cat('\n')
-  cat(paste('  Prior bias probability: Beta', '[', model.spec$a.0,', ' ,model.spec$a.1,']', sep = ''))
-  cat('\n')
-  cat(paste('  Prior nu: ', model.spec$nu, sep = ''))
+  cat(paste('  Prior for 1/tau^2: Scale.Gamma', '[', hyper_corrected$scale.sigma.between,', ' ,
+            hyper_corrected$df.scale.between,']', sep = ''))
   cat('\n')
 
+  cat('\n')
+  cat('  Hyper-priors parameters for the Model of Bias:\n')
+  hyper_bias = model.spec$hyper_bias
+  cat(paste('  Prior bias interval: Uniform', '[', hyper_bias$B.lower,', ' ,hyper_bias$B.upper,']', sep = ''))
+  cat('\n')
+  cat(paste('  Prior bias probability: Beta', '[', hyper_bias$a.0,', ' ,hyper_bias$a.1,']', sep = ''))
+  cat('\n')
+  cat(paste('  Prior nu: ', hyper_bias$nu, sep = ''))
+  cat('\n')
 
   cat('\n')
-  cat('Posterior distributions: \n')
-  print(round(x$summary.par, digits))
+  cat('Posterior distributions:\n')
+  cat('-------------------\n')
+  cat('Model of Interest (Bias-Corrected):\n')
+  print(round(x$model_corrected, digits))
 
   cat('\n-------------------\n')
+  cat('Model of Bias:\n')
+  print(round(x$model_biased, digits))
 
-  #  cat('Predictive effects:\n')
-  #  print(round(x$summary.predictive.effects, digits))
-
-  #  cat('\n-------------------\n')
+  cat('\n-------------------\n')
 
   mcmc = x$mcmc.setup
   cat(paste('MCMC setup (fit using jags): ', mcmc$n.chains, ' chains, each with ', mcmc$n.iter, ' iterations (first ', mcmc$n.burnin, ' discarded)', sep = ''))
@@ -108,4 +112,3 @@ print.summary.bcmeta = function(x, digits, ...) {
   cat(paste('pD: ', round(x$pD, digits), sep = ''))
   cat('\n')
 }
-

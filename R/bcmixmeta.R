@@ -236,10 +236,16 @@ bcmixmeta.default = function(
   # se.y = data$seTE[order(data$TE)]
 
   # Avoid order of the effects
-  y = data$TE
-  se.y = data$seTE
-  x = x            # a single covariate for meta-regression
+  y = c(data$TE, NA)
+  se.y = c(data$seTE, 1)
   N = length(y)
+
+  if(!is.null(x)){
+    y = data$TE
+    se.y = data$seTE
+    x = x            # a single covariate for meta-regression
+    N = length(y)
+  }
 
   if(N<5)stop("Low number of studies in the meta-analysis!")
 
@@ -432,7 +438,10 @@ bcmixmeta.default = function(
           theta[i] ~  dnorm(mu.0, inv.var.0)
 
   # Dirichlet Process for biased component ............................
-           beta[i] <- mu.k[group[i]]
+         # beta[i] <- mu.k[group[i]]
+           beta[i] ~ dnorm(mu_k[group[i]],
+                           tau_k[group[i]])  # Bias effect from cluster
+
            group[i] ~ dcat(p.cluster[])
 
   for(j in 1:K)
@@ -483,10 +492,15 @@ mu.new ~ dnorm(mu.0,  inv.var.0)
 
   #q.beta <- 0.01  # quality constant to increase the variability when I=1
 
-  for(k in 1:K){
-        mu.k[k] ~ dnorm(B, inv.var.beta) # DP on the betas_i
-    #   mu.k[k] ~ dnorm(B, inv.var.0*q.beta)
-        }
+  # for(k in 1:K){
+  #       mu.k[k] ~ dnorm(B, inv.var.beta) # DP on the betas_i
+  #   #   mu.k[k] ~ dnorm(B, inv.var.0*q.beta)
+  #       }
+
+for (k in 1:K) {
+    mu_k[k] ~ dnorm(B, inv.var.beta)     # Cluster-specific bias mean
+    tau_k[k] ~ dgamma(0.1, 0.1)          # Cluster-specific bias precision
+  }
 
   inv.var.beta ~ dscaled.gamma(scale.sigma.beta, df.scale.beta)
   sd.beta = pow(inv.var.beta, -0.5)

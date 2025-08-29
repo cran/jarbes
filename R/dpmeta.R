@@ -114,8 +114,8 @@ dpmeta.default = function(
 {
   if(!is.null(parallel) && parallel != "jags.parallel") stop("The parallel option must be NULL or 'jags.parallel'")
   # Data
-  y = data$TE
-  se.y = data$seTE
+  y = c(data$TE, NA)
+  se.y = c(data$seTE, 1)
   N = length(y)
 
   if(N<3)stop("Low number of studies in the meta-analysis!")

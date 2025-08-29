@@ -132,19 +132,29 @@ dpmetareg.default = function(
   # List of parameters
   par.dp  <- c("mu.k",
                "beta.k",
-                "mu.theta",
-                "theta",
+               "mu.theta",
+               "mu.theta.new",
+               "theta",
                 "mu.0",
                 "sd.0",
                 "pi",
                 "alpha",
-                "gind")
+                "gind",
+                "x",
+                 "y.new")
 
   # Model in BUGS
   model.bugs <-
     "
   model
   {
+   # A little imputation model for x .....................
+   for(i in 1:N)
+      {
+      x[i] ~ dnorm(mu_x, tau_x)
+  #x.new[i] ~ dnorm(mu_x, tau_x)
+      }
+
    for( i in 1 : N )
    {
   # Likelihood of theta[i] ............................
@@ -153,26 +163,37 @@ dpmetareg.default = function(
 
   # Dirichlet Process Random effects ..................
 
-          theta[i] ~ dnorm(mu.theta[i], inv.var.0)                # This one possible way to use scale mixtures
-        #   theta[i] ~ dt(mu.theta[i], inv.var.0, 4)
+          theta[i] ~ dnorm(mu.theta[i], inv.var[group[i]])        # This one possible way to use scale mixtures
+        # theta[i] ~ dt(mu.theta[i], inv.var.0, 4)
 
 
        #   mu.theta[i] <- mu.k[group[i]] + beta.k*x[i]            # This is DP + linear regression
 
            mu.theta[i] <- mu.k[group[i]] + beta.k[group[i]]*x[i]  #  This is DDP
-           group[i] ~ dcat(pi[])
 
+           mu.theta.new[i] ~ dnorm( mu.k[group[i]] + beta.k[group[i]]*x[i], inv.var[group[i]])
+           y.new[i] ~ dnorm(mu.theta.new[i], 1)
+           group[i] ~ dcat(p[])
 
 
   #Frequency of study i belong to cluster j
   for(j in 1:K)
   {gind[i, j] <- equals(j, group[i])}
-           }
+   }
+
+  # Priors for missing on X
+
+  mu_x  ~ dnorm(0, 0.001)
+  tau_x <- pow(sigma_x, -2)
+  sigma_x ~ dunif(0, 10)
 
  # Priors for the clusters' regression parameters ......................
   for(k in 1:K){
          mu.k[k] ~ dnorm(mu.0, inv.var.0)
        beta.k[k] ~ dnorm(mu.0, inv.var.0)
+       inv.var[k] ~ dscaled.gamma(scale.sigma.between,
+                            df.scale.between)
+
 
       #      mu.k[k] ~ dt(mu.0, inv.var.0, 4)   # This is the part to robustify  => no pasa nada!
       #    beta.k[k] ~ dt(mu.0, inv.var.0, 4)   # but I need to investigate this part. => no pasa nada!
@@ -203,7 +224,7 @@ dpmetareg.default = function(
     for (j in 2:K) {
              q[j] ~ dbeta(1, alpha)
              p[j] <- q[j]*(1 - q[j-1])*p[j-1]/q[j-1]
-            pi[j] <- p[j]/sum(p[])                    # Make sure that pi[] adds to 1
+           # pi[j] <- p[j]/sum(p[])                    # Make sure that pi[] adds to 1
     }
   }
   "

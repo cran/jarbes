@@ -15,7 +15,7 @@
 #'
 #' @export
 
-plot.dpmeta = function(x,
+plot.dpmmeta = function(x,
                        x.lim = c(-3, 3),
                        y.lim = c(0, 2),
                        x.lab = "Treatment Effect: log(OR)",

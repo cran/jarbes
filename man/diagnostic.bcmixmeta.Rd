@@ -14,10 +14,11 @@
   bias.plot = TRUE,
   cross.val.plot = FALSE,
   level = c(0.5, 0.75, 0.95),
+  cut.point = 0,
   x.lim = c(0, 1),
   y.lim = c(0, 10),
-  x.lab = "P(Bias)",
-  y.lab = "Mean Bias",
+  x.lab = "P(Bias|Data)",
+  y.lab = expression(beta^new),
   title.plot = paste("Bias Diagnostics Contours (50\%, 75\% and 95\%)"),
   kde2d.n = 25,
   marginals = TRUE,
@@ -48,6 +49,8 @@
 \item{cross.val.plot}{Display the cross validation plot. The default is FALSE.}
 
 \item{level}{Vector with the probability levels of the contour plot. The default values are: 0.5, 0.75, and 0.95.}
+
+\item{cut.point}{This is a reference point for the bias distribution. The default value is cut.point = 0 to understand if we can learn bias from the data}
 
 \item{x.lim}{Numeric vector of length 2 specifying the x-axis limits.}
 

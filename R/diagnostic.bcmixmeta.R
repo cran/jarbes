@@ -13,7 +13,7 @@
 #' @param cross.val.plot Display the cross validation plot. The default is FALSE.
 #'
 #' @param level Vector with the probability levels of the contour plot. The default values are: 0.5, 0.75, and 0.95.
-
+#' @param cut.point This is a reference point for the bias distribution. The default value is cut.point = 0 to understand if we can learn bias from the data
 #' @param x.lim Numeric vector of length 2 specifying the x-axis limits.
 #' @param y.lim Numeric vector of length 2 specifying the y-axis limits.
 #' @param x.lab Text with the label of the x-axis.
@@ -41,30 +41,31 @@
 #' @export
 
 diagnostic.bcmixmeta = function(object,
-                               # Parameters for the forest plot ....
-                               post.p.value.cut = 0.05,
-                               study.names = NULL,
-                               size.forest = 0.4,
-                               lwd.forest = 0.2,
-                               shape.forest = 23,
-                               # Parameters for the bias check plot...
-                               bias.plot = TRUE,
-                               cross.val.plot = FALSE,
-                               level = c(0.5, 0.75, 0.95),
-                               x.lim = c(0, 1),
-                               y.lim = c(0, 10),
-                               x.lab = "P(Bias)",
-                               y.lab = "Mean Bias",
-                               title.plot = paste("Bias Diagnostics Contours (50%, 75% and 95%)"),
-                               kde2d.n = 25,
-                               marginals = TRUE,
-                               bin.hist = 30,
-                               color.line = "black",
-                               color.hist = "white",
-                               color.data.points = "black",
-                               alpha.data.points = 0.1,
-                               S = 5000,
-                               ...) {
+                                # Parameters for the forest plot ....
+                                post.p.value.cut = 0.05,
+                                study.names = NULL,
+                                size.forest = 0.4,
+                                lwd.forest = 0.2,
+                                shape.forest = 23,
+                                # Parameters for the bias check plot...
+                                bias.plot = TRUE,
+                                cross.val.plot = FALSE,
+                                level = c(0.5, 0.75, 0.95),
+                                cut.point = 0,
+                                x.lim = c(0, 1),
+                                y.lim = c(0, 10),
+                                x.lab = "P(Bias|Data)",
+                                y.lab = expression(beta^new),
+                                title.plot = paste("Bias Diagnostics Contours (50%, 75% and 95%)"),
+                                kde2d.n = 25,
+                                marginals = TRUE,
+                                bin.hist = 30,
+                                color.line = "black",
+                                color.hist = "white",
+                                color.data.points = "black",
+                                alpha.data.points = 0.1,
+                                S = 5000,
+                                ...) {
 
   x=y=ylo=yhi=kde2d=pi.bias=bias=dens.z=p.forest=NULL
 
@@ -116,19 +117,24 @@ diagnostic.bcmixmeta = function(object,
   #            ggtitle("Bayesian Cross-Valdiation") +
   #            theme_bw()
 
-  # Bias plot ....................................................................
+  # Bias plot ..................................................................
 
   # Data preparation
-  p.bias.1 = object$BUGSoutput$sims.list$p.bias[ ,2]
-      #mu.0 = object$BUGSoutput$sims.list$mu.0
-   delta.1 =  object$BUGSoutput$sims.list$B #object$BUGSoutput$sims.list$beta[, 66]  #
 
-  dat.post = data.frame(x = p.bias.1, y = delta.1)
+  N = dim(object$data)[1] + 1
+
+  p.bias.1 = object$BUGSoutput$sims.list$p.bias[ ,2]
+
+  beta.new  = object$BUGSoutput$sims.list$beta[,66] # Predictive mean of the bias component
+
+
+  dat.post = data.frame(x = p.bias.1, y = beta.new)
   dat.post = dat.post[sample(1:S), ]
 
   tau = object$BUGSoutput$sims.list$sd.0
 
-   cut.point = 2*mean(tau)
+  #cut.point = 2*mean(tau)
+  cut.point = cut.point
 
   # Base plot ..................................................................
   baseplot = ggplot(dat.post, aes(x = x, y = y)) +
@@ -137,7 +143,7 @@ diagnostic.bcmixmeta = function(object,
     scale_x_continuous(name = x.lab, limits = x.lim) +
     scale_y_continuous(name = y.lab, limits = y.lim) +
     ggtitle(title.plot) +
-    geom_hline(yintercept=cut.point, linetype="dashed", color = "black")+
+    geom_hline(yintercept = cut.point, linetype = "dashed", color = "black")+
     theme_bw()
 
   # Non-parametric .............................................................

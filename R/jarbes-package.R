@@ -14,8 +14,8 @@
 #' \tabular{ll}{
 #' Package:  \tab jarbes     \cr
 #' Type:     \tab Package    \cr
-#' Version:  \tab 2.3.0      \cr
-#' Date:     \tab 2025-06-30 \cr
+#' Version:  \tab 2.4.0      \cr
+#' Date:     \tab 2025-08-29 \cr
 #' License:  \tab GPL (>= 2) \cr
 #' LazyLoad: \tab yes        \cr }
 #'

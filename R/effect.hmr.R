@@ -98,6 +98,10 @@ effect.hmr = function(object,
   }
 
   dat.post = dat.post[sample(1:S), ]
+
+  # Clean NA or Inf
+  dat.post = dat.post[complete.cases(dat.post) & apply(dat.post, 1, function(row) all(is.finite(row))), ]
+
   cut.point = line.no.effect
 
   # Base plot ..................................................................
